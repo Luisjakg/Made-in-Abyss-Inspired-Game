@@ -546,11 +546,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canSprint: 1
+  canJump: 1
   sprintKey: 304
-  walkSpeed: 3
-  sprintSpeed: 6
-  gravity: 30
+  jumpKey: 32
+  walkSpeed: 5
+  sprintSpeed: 7
   lookSpeed: 1
+  jumpForce: 10
+  gravity: 30
   upperLookLimit: 80
   lowerLookLimit: 80
 --- !u!1 &1947897227
