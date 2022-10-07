@@ -5,24 +5,25 @@ using UnityEngine;
 
 public class Sliding : MonoBehaviour
 {
-    [Header("References")] 
-    [SerializeField] private Transform orientation;
-    [SerializeField] private Transform playerObj;
+    [Header("References")]
+    public Transform orientation;
+    public Transform playerObj;
     private Rigidbody rb;
     private PlayerMovement pm;
+    private bool canSlide;
 
-    [Header("Sliding")] 
-    [SerializeField] private float maxSlideTime;
-    [SerializeField] private float slideForce;
+    [Header("Sliding")]
+    public float maxSlideTime;
+    public float slideForce;
     private float slideTimer;
-    private bool sliding;
+
     public float slideYScale;
     private float startYScale;
 
-    [Header("Input")] [SerializeField] private KeyCode slideKey = KeyCode.LeftControl;
+    [Header("Input")]
+    public KeyCode slideKey = KeyCode.LeftControl;
     private float horizontalInput;
     private float verticalInput;
-
 
 
     private void Awake()
@@ -32,29 +33,30 @@ public class Sliding : MonoBehaviour
 
         startYScale = playerObj.localScale.y;
     }
+    
 
     private void Update()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        canSlide = pm.getCanSlide();
+        if (!canSlide) return;
+        verticalInput = Input.GetAxisRaw("Forward");
 
-        if (Input.GetKeyDown(slideKey) && (horizontalInput != 0 || verticalInput != 0) && pm.GetState() == PlayerMovement.MovementState.sprinting) 
+        if (Input.GetKeyDown(slideKey) && (horizontalInput != 0 || verticalInput != 0))
             StartSlide();
-        
 
-        if (Input.GetKeyUp(slideKey) && sliding)
+        if (Input.GetKeyUp(slideKey) && pm.sliding)
             StopSlide();
     }
 
     private void FixedUpdate()
     {
-        if (sliding)
+        if (pm.sliding)
             SlidingMovement();
     }
 
     private void StartSlide()
     {
-        sliding = true;
+        pm.sliding = true;
 
         playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
@@ -65,10 +67,20 @@ public class Sliding : MonoBehaviour
     private void SlidingMovement()
     {
         Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-        
-        rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
 
-        slideTimer -= Time.deltaTime;
+        // sliding normal
+        if(!pm.OnSlope() || rb.velocity.y > -0.1f)
+        {
+            rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
+
+            slideTimer -= Time.deltaTime;
+        }
+
+        // sliding down a slope
+        else
+        {
+            rb.AddForce(pm.GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+        }
 
         if (slideTimer <= 0)
             StopSlide();
@@ -76,11 +88,14 @@ public class Sliding : MonoBehaviour
 
     private void StopSlide()
     {
-        /*if (Physics.Raycast(transform.position, Vector3.up, playerHeight * 0.5f + 0.3f))
-            return;*/
-        sliding = false;
+        pm.sliding = false;
+        if (Physics.Raycast(transform.position, Vector3.up, pm.getPlayerHeight() * 0.5f + 0.3f))
+        {
+            Debug.Log("obstruction detected queeen");
+            return; 
+        }
+   
+
         playerObj.localScale = new Vector3(playerObj.localScale.x, startYScale, playerObj.localScale.z);
     }
-    
-    
 }
