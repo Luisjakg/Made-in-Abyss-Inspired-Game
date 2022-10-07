@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -46,7 +47,7 @@ public class PlayerMovement : MonoBehaviour
     private bool exitingSlope;
     
     
-    //Other variables
+    [Header("Other")]
     [SerializeField] private Transform orientation;
 
     private float horizontalInput;
@@ -57,7 +58,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
 
     [SerializeField] private MovementState state;
-    [SerializeField] enum MovementState
+    [SerializeField] public enum MovementState
     {
         walking,
         sprinting,
@@ -76,7 +77,6 @@ public class PlayerMovement : MonoBehaviour
     
     private void Update()
     {
-        Debug.Log(grounded);
         grounded = Physics.SphereCast(transform.position, sphereRadius - .01f, Vector3.down, out var hit, 
             .85f, ~LayerMask.GetMask("Player"), QueryTriggerInteraction.Ignore);
         
@@ -97,7 +97,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleInput()
     {
-        Debug.Log("current speed: " + moveSpeed);
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -127,14 +126,14 @@ public class PlayerMovement : MonoBehaviour
     private void StateHandler()
     {
         //Mode - Crouching
-        if (grounded && Input.GetKey(crouchKey))
+        if (grounded && Input.GetKey(crouchKey) && canCrouch && state != MovementState.sprinting)
         {
             state = MovementState.crouching;
             moveSpeed = crouchSpeed;
         }
         
         //Mode - Sprinting
-        else if (grounded && Input.GetKey(sprintKey))
+        else if (grounded && Input.GetKey(sprintKey) && canSprint)
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
@@ -218,6 +217,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
+        if (!canJump) return;
+        
         exitingSlope = true;
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
         
@@ -236,6 +237,9 @@ public class PlayerMovement : MonoBehaviour
         if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            Debug.Log("Handling slope");
+            Debug.Log("Handling Steep Slope: " + (angle < maxSlopeAngle && angle != 0));
+
             return angle < maxSlopeAngle && angle != 0;
         }
         return false;
@@ -244,6 +248,11 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 GetSlopeMoveDirection()
     {
         return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
+    }
+
+    public MovementState GetState()
+    {
+        return state;
     }
     
 }
