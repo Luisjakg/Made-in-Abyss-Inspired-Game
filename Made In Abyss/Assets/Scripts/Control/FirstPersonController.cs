@@ -178,7 +178,6 @@ public class FirstPersonController : MonoBehaviour
                 defaultYpos + (isCrouching ? crouchBobAmount : isSprinting ? sprintBobAmount : walkBobAmount) * Mathf.Sin(timer),
                 playerCamera.transform.localPosition.z);
         }
-
     }
 
     private void ApplyFinalMovements()

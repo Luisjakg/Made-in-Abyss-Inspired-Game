@@ -1,18 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Action Availability")]
+    [Header("Action Availability")] 
     [SerializeField] private bool canMove = true;
     [SerializeField] private bool canSprint = true;
     [SerializeField] private bool canJump = true;
     [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canSlide = true;
-    
-    [Header("Movement")]
-    private float moveSpeed;
+
+    [Header("Movement")] private float moveSpeed;
     [SerializeField] float walkSpeed;
     [SerializeField] float sprintSpeed;
     [SerializeField] float slideSpeed;
@@ -25,35 +25,36 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float groundDrag;
 
-    [Header("Jumping")]
-    [SerializeField] float jumpForce;
+    [Header("Jumping")] [SerializeField] float jumpForce;
     [SerializeField] float jumpCooldown;
     [SerializeField] float airMultiplier;
     bool readyToJump;
 
-    [Header("Crouching")]
-    [SerializeField] float crouchSpeed;
+    [Header("Crouching")] [SerializeField] float crouchSpeed;
     [SerializeField] float crouchYScale;
     private float startYScale;
 
-    [Header("Keybinds")]
-    [SerializeField] KeyCode jumpKey = KeyCode.Space;
+    [Header("Keybinds")] [SerializeField] KeyCode jumpKey = KeyCode.Space;
     [SerializeField] KeyCode sprintKey = KeyCode.LeftShift;
     [SerializeField] KeyCode crouchKey = KeyCode.LeftControl;
 
-    [Header("Ground Check")]
-    [SerializeField] float playerHeight;
+    [Header("Ground Check")] [SerializeField]
+    float playerHeight;
+
     [SerializeField] LayerMask whatIsGround;
     bool grounded;
 
-    [Header("Slope Handling")]
-    [SerializeField] float maxSlopeAngle;
+    [Header("Slope Handling")] [SerializeField]
+    float maxSlopeAngle;
+
     private RaycastHit slopeHit;
     private bool exitingSlope;
-    
-    [Header("Other")]
-    [SerializeField] Transform orientation;
 
+    [Header("Other")] 
+    [SerializeField] Transform orientation;
+    [SerializeField] private PlayerCam playerCam;
+
+    private Vector3 playerLookDirection;
     float horizontalInput;
     float verticalInput;
 
@@ -62,6 +63,7 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody rb;
 
     public MovementState state;
+
     public enum MovementState
     {
         walking,
@@ -85,6 +87,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log(readyToJump);
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
@@ -110,7 +113,7 @@ public class PlayerMovement : MonoBehaviour
         getInputs();
 
         // when to jump
-        if(Input.GetKey(jumpKey) && readyToJump && grounded && canJump)
+        if (Input.GetKey(jumpKey) && readyToJump && grounded && canJump)
         {
             readyToJump = false;
 
@@ -120,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // start crouch
-        if (Input.GetKeyDown(crouchKey) && canCrouch)
+        if (Input.GetKeyDown(crouchKey) && canCrouch && state != MovementState.sprinting)
         {
             transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
@@ -132,9 +135,10 @@ public class PlayerMovement : MonoBehaviour
             //Check if there is an object blocking the stand 
             if (Physics.Raycast(transform.position, Vector3.up, playerHeight * 0.5f + 0.3f))
             {
-                Debug.Log("obstruction detected queeen");
-                return; 
+                Debug.Log("obstruction detected");
+                return;
             }
+
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
     }
@@ -142,7 +146,7 @@ public class PlayerMovement : MonoBehaviour
     private void StateHandler()
     {
         // Mode - Sliding
-        if (sliding && canSlide && canMove)
+        if (sliding && canSlide && canMove && state != MovementState.crouching && state is MovementState.sprinting or MovementState.sliding)
         {
             state = MovementState.sliding;
 
@@ -154,21 +158,21 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Mode - Crouching
-        else if (Input.GetKey(crouchKey) && canCrouch && canMove)
+        else if (Input.GetKey(crouchKey) && canCrouch && canMove && state != MovementState.sprinting && !sliding)
         {
             state = MovementState.crouching;
             desiredMoveSpeed = crouchSpeed;
         }
 
         // Mode - Sprinting
-        else if(grounded && Input.GetKey(sprintKey) && canSprint && canMove)
+        else if (grounded && Input.GetKey(sprintKey) && canSprint && canMove && state != MovementState.crouching && !sliding)
         {
             state = MovementState.sprinting;
             desiredMoveSpeed = sprintSpeed;
         }
 
         // Mode - Walking
-        else if (grounded && canMove)
+        else if (grounded && canMove && !sliding)
         {
             state = MovementState.walking;
             desiredMoveSpeed = walkSpeed;
@@ -181,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // check if desiredMoveSpeed has changed drastically
-        if(Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
+        if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && moveSpeed != 0)
         {
             StopAllCoroutines();
             StartCoroutine(SmoothlyLerpMoveSpeed());
@@ -229,18 +233,27 @@ public class PlayerMovement : MonoBehaviour
         // on slope
         if (OnSlope() && !exitingSlope)
         {
-            rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
+            if (sliding)
+                rb.AddForce(playerLookDirection.normalized * moveSpeed * 20f, ForceMode.Force);
+            else
+                rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
 
             if (rb.velocity.y > 0)
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
 
         // on ground
-        else if(grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        else if (grounded)
+        {
+            if (sliding)
+                rb.AddForce(playerLookDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            else
+                rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        }
+
 
         // in air
-        else if(!grounded)
+        else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
         // turn gravity off while on slope
@@ -279,6 +292,7 @@ public class PlayerMovement : MonoBehaviour
 
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
+
     private void ResetJump()
     {
         readyToJump = true;
@@ -288,7 +302,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool OnSlope()
     {
-        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
             return angle < maxSlopeAngle && angle != 0;
@@ -301,8 +315,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (sliding)
         {
-            horizontalInput = Input.GetAxisRaw("Horizontal");
-            verticalInput = 3f;
+            // We get the player look direction in order to make the movement independent from the camera
+            playerLookDirection = playerCam.getCameraLookDirection();
         }
         else
         {
@@ -316,6 +330,11 @@ public class PlayerMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
     }
 
+    public bool getIsGrounded()
+    {
+        return grounded;
+    }
+
     public bool getCanSlide()
     {
         return canSlide;
@@ -324,5 +343,10 @@ public class PlayerMovement : MonoBehaviour
     public float getPlayerHeight()
     {
         return playerHeight;
+    }
+
+    public MovementState getMovementState()
+    {
+        return state;
     }
 }

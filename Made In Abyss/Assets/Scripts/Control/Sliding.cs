@@ -11,6 +11,8 @@ public class Sliding : MonoBehaviour
     private Rigidbody rb;
     private PlayerMovement pm;
     private bool canSlide;
+    private bool grounded; 
+    private PlayerMovement.MovementState currentMovementState;
 
     [Header("Sliding")]
     public float maxSlideTime;
@@ -37,11 +39,15 @@ public class Sliding : MonoBehaviour
 
     private void Update()
     {
+        grounded = pm.getIsGrounded();
+        currentMovementState = pm.getMovementState();
         canSlide = pm.getCanSlide();
         if (!canSlide) return;
         verticalInput = Input.GetAxisRaw("Forward");
 
-        if (Input.GetKeyDown(slideKey) && (horizontalInput != 0 || verticalInput != 0))
+        if (Input.GetKeyDown(slideKey) && (horizontalInput != 0 || verticalInput != 0) 
+                                       && currentMovementState != PlayerMovement.MovementState.crouching
+                                       && currentMovementState == PlayerMovement.MovementState.sprinting)
             StartSlide();
 
         if (Input.GetKeyUp(slideKey) && pm.sliding)
@@ -58,9 +64,11 @@ public class Sliding : MonoBehaviour
     {
         pm.sliding = true;
 
+        //If the user is in the air then we dont add downwards force in order to avoid weird movement
+        if (grounded)
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        
         playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
-        rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
-
         slideTimer = maxSlideTime;
     }
 

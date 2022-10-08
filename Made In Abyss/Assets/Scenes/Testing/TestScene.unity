@@ -1604,7 +1604,6 @@ GameObject:
   m_Component:
   - component: {fileID: 839133524}
   - component: {fileID: 839133527}
-  - component: {fileID: 839133528}
   - component: {fileID: 839133525}
   - component: {fileID: 839133526}
   m_Layer: 3
@@ -1659,9 +1658,9 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.5
-  m_Height: 2.06324
+  m_Height: 1.987484
   m_Direction: 1
-  m_Center: {x: 0, y: -0.02122879, z: 0}
+  m_Center: {x: 0, y: 0.004322052, z: 0}
 --- !u!114 &839133527
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1671,54 +1670,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 839133523}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 073b5229c625bcb45ba5632e37d26daf, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d46f74cc7a70664badc27101595a823, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canMove: 1
   canSprint: 1
   canJump: 1
   canCrouch: 1
-  canSlide: 1
+  canUseHeadBob: 1
+  sprintKey: 304
+  jumpKey: 32
+  crouchKey: 306
+  slideKey: 99
   walkSpeed: 5
-  sprintSpeed: 8
+  sprintSpeed: 7
+  crouchSpeed: 2
   slideSpeed: 20
-  speedIncreaseMultiplier: 1
-  slopeIncreaseMultiplier: 1.5
   groundDrag: 5
+  standingHeight: 2
   jumpForce: 10
   jumpCooldown: 0.25
   airMultiplier: 0.4
-  crouchSpeed: 3
-  crouchYScale: 0.5
-  jumpKey: 32
-  sprintKey: 304
-  crouchKey: 306
-  playerHeight: 2
+  crouchYScale: 0.4
+  maxSlideTime: 1.5
+  slideForce: 200
+  slideHeight: 0.3
+  isSliding: 0
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
+  isGrounded: 0
   maxSlopeAngle: 50
+  walkBobSpeed: 14
+  walkBobAmount: 0.05
+  sprintBobSpeed: 18
+  sprintBobAmount: 0.1
+  crouchBobSpeed: 8
+  crouchBobAmount: 0.025
   orientation: {fileID: 1158004475}
-  state: 0
-  sliding: 0
---- !u!114 &839133528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 839133523}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5dd4327f1546c6749a1538ca76236744, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  orientation: {fileID: 1158004475}
-  playerObj: {fileID: 839133524}
-  maxSlideTime: 1.5
-  slideForce: 50
-  slideYScale: 0.3
-  slideKey: 99
+  playerCam: {fileID: 1947897231}
 --- !u!1 &850854984
 GameObject:
   m_ObjectHideFlags: 0
@@ -3852,6 +3841,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sensX: 75
   sensY: 75
+  upperLookLimit: 90
+  lowerLookLimit: 90
   orientation: {fileID: 1158004475}
 --- !u!1 &2060932313
 GameObject:
