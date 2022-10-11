@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using Obi;
 using UnityEngine;
 
@@ -20,11 +19,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool canUseHeadBob = true;
     [SerializeField] private bool canInputHorizontal = true;
     [SerializeField] private bool canInputVertical = true;
+    [SerializeField] private bool useFootsteps = true;
     
     [Header("States")]
     [SerializeField] private bool isCrouching;
     [SerializeField] private bool isSliding;
     [SerializeField] private bool isJumping;
+    [SerializeField] private bool isSprinting;
 
     [Header("Controls")] 
     [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
@@ -40,7 +41,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float groundDrag = 5f;
     [SerializeField] private float standingHeight = 2.0f;
     [SerializeField] private float currentMoveSpeed = 0f;
-    [SerializeField] private float desiredMoveSpeed;
+    [SerializeField] private float desiredMoveSpeed; 
+    private float currentSpeedMagnitude;
     private float lastDesiredMoveSpeed;
     private Vector3 moveDirection;
 
@@ -52,7 +54,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Crouch Parameters")]
     [SerializeField] private float crouchYScale = .4f;
-
     private float startYScale;
 
     [Header("Sliding Parameters")] 
@@ -61,7 +62,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float slideYScale = .3f;
     [SerializeField] private float slopeIncreaseMultiplier;
     [SerializeField] private float speedIncreaseMultiplier;
-
     private float slideTimer;
 
     [Header("GroundCheck")] 
@@ -83,6 +83,18 @@ public class PlayerController : MonoBehaviour
     private float defaultYpos = 0;
     private float headBobTimer;
 
+    [Header("Footstep Parameters")] 
+    [SerializeField] private float baseStepSpeed = .05f;
+    [SerializeField] private float crouchStepMultiplier = 1.5f;
+    [SerializeField] private float sprintStepMultiplier = 0.6f;
+    [SerializeField] private AudioSource footstepAudioSource = default;
+    [SerializeField] private AudioClip[] grassClips = default;
+    [SerializeField] private AudioClip[] stoneClips = default;
+    [SerializeField] private AudioClip[] woodClips = default;
+    private float footstepTimer = 0;
+    private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
+        isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
+
     [Header("Orientation")] 
     [SerializeField] private Transform orientation;
     [SerializeField] private Camera playerCam;
@@ -103,6 +115,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        currentSpeedMagnitude = rb.velocity.magnitude;
+        isSprinting = shouldSprint;
+        
         //ground check
         isGrounded = Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround);
         
@@ -119,6 +134,8 @@ public class PlayerController : MonoBehaviour
         if (canCrouch) HandleCrouch();
 
         if (canUseHeadBob) HandleHeadBob();
+
+        if (useFootsteps) HandleFootsteps();
         
         //handle drag
 
@@ -149,8 +166,6 @@ public class PlayerController : MonoBehaviour
             moveDirection = new Vector3(playerCam.GetComponent<PlayerCam>().getCameraLookDirection().x, 0, playerCam.GetComponent<PlayerCam>().getCameraLookDirection().z);
         else if (!isSliding)
             moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
-
     }
     
     private void HandleJump()
@@ -180,7 +195,9 @@ public class PlayerController : MonoBehaviour
     
     private void HandleSlide()
     {
-        if (!shouldSlide || isCrouching) return;
+        // We check the current speed to avoid overlap with crouch
+        if(currentSpeedMagnitude < sprintSpeed - .5f) return;
+        if (!shouldSlide || isCrouching || !isGrounded) return;
         if (!isSliding) StartSlide();
         else StopSlide();
     }
@@ -202,19 +219,26 @@ public class PlayerController : MonoBehaviour
     {
         isSliding = false;
         canInputVertical = true;
-        
-        if (isSliding && Physics.Raycast(transform.position, Vector3.up, 1.2f)) return;
+
+        if (Physics.Raycast(transform.position, Vector3.up, 1.2f))
+        {
+            canSprint = false;
+            isCrouching = true;
+            return;
+        }
+        canSprint = true;
+        isCrouching = false;
 
         transform.localScale = new(transform.localScale.x, startYScale, transform.localScale.z);
     }
     
     private void HandleCrouch()
     {
+        if (currentMoveSpeed > walkSpeed + .5f) return;
         if (!shouldCrouch || isSliding) return;
 
         if (isCrouching && Physics.Raycast(transform.position, Vector3.up, 1.2f)) return;
         
-        Debug.Log("crouch input detected");
         transform.localScale = new Vector3(transform.localScale.x, (isCrouching ? startYScale: crouchYScale), transform.localScale.z);
         
         //We avoid applying downwards force when standing up to avoid weird movement
@@ -222,6 +246,7 @@ public class PlayerController : MonoBehaviour
         {
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
         }
+        canSprint = !canSprint;
         isCrouching = !isCrouching;
     }
     
@@ -236,6 +261,37 @@ public class PlayerController : MonoBehaviour
                 defaultYpos + (isCrouching ? crouchBobAmount : shouldSprint ? sprintBobAmount : walkBobAmount) *
                 Mathf.Sin(headBobTimer),
                 playerCam.transform.localPosition.z);
+        }
+    }
+    
+    private void HandleFootsteps()
+    {
+        if (!isGrounded || isSliding) return;
+        if (currentSpeedMagnitude < 1f) return;
+
+        footstepTimer -= Time.deltaTime;
+
+        if (footstepTimer <= 0)
+        {
+            if (Physics.Raycast(playerCam.transform.position, Vector3.down, out RaycastHit hit, 3))
+            {
+                switch (hit.collider.tag)
+                {
+                    case "Footsteps/GRASS":
+                        footstepAudioSource.PlayOneShot(grassClips[UnityEngine.Random.Range(0, woodClips.Length - 1)]);
+                        break;
+                    case "Footsteps/STONE":
+                        footstepAudioSource.PlayOneShot(stoneClips[UnityEngine.Random.Range(0, stoneClips.Length - 1)]);
+                        break;
+                    case "Footsteps/WOOD":
+                        footstepAudioSource.PlayOneShot(woodClips[UnityEngine.Random.Range(0, woodClips.Length - 1)]);
+                        break;
+                    default:
+                        footstepAudioSource.PlayOneShot(stoneClips[UnityEngine.Random.Range(0, stoneClips.Length - 1)]);
+                        break;
+                }
+            }
+            footstepTimer = GetCurrentOffSet;
         }
     }
     
@@ -302,9 +358,15 @@ public class PlayerController : MonoBehaviour
                 rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
             }
         }
-        
+
+        //Check if player stopped to remove all momentum
+        if (currentSpeedMagnitude < desiredMoveSpeed)
+        {
+            StopAllCoroutines();
+            currentMoveSpeed = desiredMoveSpeed;
+        }
         // check if desiredMoveSpeed has changed drastically
-        if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && currentMoveSpeed != 0)
+        else if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && currentMoveSpeed != 0)
         {
             StopAllCoroutines();
             StartCoroutine(SmoothlyLerpMoveSpeed());
@@ -365,7 +427,7 @@ public class PlayerController : MonoBehaviour
         if (isSliding && OnSlope() && rb.velocity.y < 0.1f)
             desiredMoveSpeed = slideSpeed;
         else
-            desiredMoveSpeed = (shouldSprint ? sprintSpeed : isCrouching ? crouchSpeed : walkSpeed);
+            desiredMoveSpeed = (shouldSprint || isSliding ? sprintSpeed : isCrouching ? crouchSpeed : walkSpeed);
     }
 
     private float CurrentHeight()
