@@ -1675,8 +1675,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canSprint: 1
   canJump: 1
+  canSlide: 1
   canCrouch: 1
   canUseHeadBob: 1
+  canInputHorizontal: 1
+  canInputVertical: 1
+  isCrouching: 0
+  isSliding: 0
+  isJumping: 0
   sprintKey: 304
   jumpKey: 32
   crouchKey: 306
@@ -1687,14 +1693,17 @@ MonoBehaviour:
   slideSpeed: 20
   groundDrag: 5
   standingHeight: 2
+  currentMoveSpeed: 0
+  desiredMoveSpeed: 0
   jumpForce: 10
   jumpCooldown: 0.25
   airMultiplier: 0.4
   crouchYScale: 0.4
   maxSlideTime: 1.5
-  slideForce: 200
-  slideHeight: 0.3
-  isSliding: 0
+  slideForce: 1
+  slideYScale: 0.3
+  slopeIncreaseMultiplier: 2.5
+  speedIncreaseMultiplier: 1.5
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
