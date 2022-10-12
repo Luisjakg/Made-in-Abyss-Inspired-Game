@@ -1087,8 +1087,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 634508200}
   m_LocalRotation: {x: -0, y: -0, z: -0.5380466, w: 0.8429151}
-  m_LocalPosition: {x: 43.12, y: 7.35, z: -7.02}
-  m_LocalScale: {x: 0.099010006, y: 35.642868, z: 8.846966}
+  m_LocalPosition: {x: 43.12, y: 7.35, z: -33.9}
+  m_LocalScale: {x: 0.099010006, y: 35.642868, z: 26.978823}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1559382143}
@@ -1280,14 +1280,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 655725731}
-  m_LocalRotation: {x: -0, y: -0, z: -0.47777683, w: 0.87848127}
-  m_LocalPosition: {x: 41.93, y: 9.69, z: -16.02}
+  m_LocalRotation: {x: -0, y: -0, z: -0.662489, w: 0.7490717}
+  m_LocalPosition: {x: 41.93, y: 1.8, z: -16.02}
   m_LocalScale: {x: 0.099010006, y: 35.642868, z: 8.846966}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1559382143}
   m_RootOrder: 12
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -57.081}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -82.98}
 --- !u!65 &655725733
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1693,7 +1693,7 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 7
   crouchSpeed: 3.2
-  slideSpeed: 15
+  downSlopeSlideSpeed: 15
   groundDrag: 5
   standingHeight: 2
   currentMoveSpeed: 0
@@ -1712,6 +1712,7 @@ MonoBehaviour:
     m_Bits: 64
   isGrounded: 0
   maxSlopeAngle: 50
+  slideSpeedUpSlopeAngle: 20
   walkBobSpeed: 14
   walkBobAmount: 0.05
   sprintBobSpeed: 18
