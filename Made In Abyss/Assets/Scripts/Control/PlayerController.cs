@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
     private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
     private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
-    private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded;
+    private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting;
 
     [Header("Functional Options")] 
     [SerializeField] private bool canSprint = true;
@@ -17,8 +17,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool canSlide = true;
     [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canUseHeadBob = true;
-    [SerializeField] private bool canInputHorizontal = true;
-    [SerializeField] private bool canInputVertical = true;
     [SerializeField] private bool useFootsteps = true;
     
     [Header("States")]
@@ -119,7 +117,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         currentSpeedMagnitude = rb.velocity.magnitude;
-        isSprinting = shouldSprint;
+        isSprinting = shouldSprint && canSprint && !isSliding && !isCrouching;
         DesiredMoveSpeed();
         
         //ground check
@@ -160,14 +158,12 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovementInput()
     {
-        if (canInputHorizontal) horizontalInput = Input.GetAxisRaw("Horizontal");
-        else horizontalInput = 0;
+        horizontalInput = Input.GetAxisRaw("Horizontal");
 
-        if (canInputVertical) verticalInput = Input.GetAxisRaw("Vertical");
-        else verticalInput = 0;
+        verticalInput = Input.GetAxisRaw("Vertical");
 
         if (shouldSlide)
-            moveDirection = new Vector3(playerCam.GetComponent<PlayerCam>().getCameraLookDirection().x, 0, playerCam.GetComponent<PlayerCam>().getCameraLookDirection().z);
+            moveDirection = playerCam.transform.forward;
         else if (!isSliding)
             moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
     }
@@ -175,14 +171,16 @@ public class PlayerController : MonoBehaviour
     private void HandleSprint()
     {
         if (!shouldSprint) return;
-        if (isCrouching) StopCrouch();
+        bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
+        if (isCrouching && !roofAbove) StopCrouch();
+        if (Input.GetKeyDown(sprintKey) && isSliding && !roofAbove) StopSlide();
     }
     
     private void HandleJump()
     {
-        if (!shouldJump) return;
-        
-        if(isSliding) StopSlide();
+        if (!shouldJump || !readyToJump) return;
+        bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
+        if(isSliding && !roofAbove) StopSlide();
 
         isJumping = true;
         readyToJump = false;
@@ -206,16 +204,15 @@ public class PlayerController : MonoBehaviour
     private void HandleSlide()
     {
         // We check the current speed to avoid overlap with crouch
-        if(currentSpeedMagnitude < sprintSpeed - .5f && !isSliding) return;
-        if (!shouldSlide || isCrouching || !isGrounded) return;
-        if (!isSliding) StartSlide();
-        else StopSlide();
+        if (!shouldSlide) return;
+        if (isCrouching || !isGrounded) return;
+        if (!isSliding && isSprinting) StartSlide();
+        else StopSlideWithCrouch();
     }
 
     private void StartSlide()
     {
         isSliding = true;
-        canInputVertical = false;
 
         //If the user is in the air then we dont add downwards force in order to avoid weird movement
         if (isGrounded)
@@ -225,27 +222,24 @@ public class PlayerController : MonoBehaviour
         slideTimer = maxSlideTime;
     }
 
+    private void StopSlideWithCrouch()
+    {
+        isSliding = false;
+        StartCrouch();
+    }
+
     private void StopSlide()
     {
         isSliding = false;
-        canInputVertical = true;
-        StartCrouch();
-        /*if (Physics.Raycast(transform.position, Vector3.up, 1.2f))
-        {
-            canSprint = false;
-            isCrouching = true;
-            return;
-        }
         canSprint = true;
-        isCrouching = false;
 
-        transform.localScale = new(transform.localScale.x, startYScale, transform.localScale.z);*/
+        transform.localScale = new(transform.localScale.x, startYScale, transform.localScale.z);
     }
     
     private void HandleCrouch()
     {
-        if (currentMoveSpeed > walkSpeed + .5f) return;
-        if (!shouldCrouch || isSliding) return;
+        if (!shouldCrouch) return;
+        if (isSprinting || isSliding) return;
         if (!isCrouching) StartCrouch();
         else StopCrouch();
     }
@@ -264,7 +258,7 @@ public class PlayerController : MonoBehaviour
             isStuck = true;
             return;
         }
-        else isStuck = false;
+        isStuck = false;
         canSprint = true;
         transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         isCrouching = false;
@@ -326,7 +320,7 @@ public class PlayerController : MonoBehaviour
             
             //We add force to avoid weird bouncing while going down slopes
             if (rb.velocity.y > 0)
-                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+                rb.AddForce(Vector3.down * (isCrouching ? 40f : 80f), ForceMode.Force);
         }
 
         //on ground
@@ -353,8 +347,8 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
 
 
-        if (currentSpeedMagnitude <= 2f && isGrounded)
-            StopSlide();
+        if (currentSpeedMagnitude <= crouchSpeed && isGrounded)
+            StopSlideWithCrouch();
     }
 
     private void SpeedControl()
@@ -444,9 +438,8 @@ public class PlayerController : MonoBehaviour
 
     private void DesiredMoveSpeed()
     {
-        if (isSliding && OnSlope() && rb.velocity.y < -7f && slopeAngle > slideSpeedUpSlopeAngle)
+        if (isSliding && OnSlope() && rb.velocity.y < -3f && slopeAngle > slideSpeedUpSlopeAngle)
         {
-            Debug.Log(rb.velocity.y);
             Debug.Log("Down slope detected");
             desiredMoveSpeed = downSlopeSlideSpeed;
         }
@@ -457,7 +450,7 @@ public class PlayerController : MonoBehaviour
         else if (isSliding && isGrounded)
             desiredMoveSpeed = .0f;
         else
-            desiredMoveSpeed = (!isStuck && shouldSprint || isSliding ? sprintSpeed : isCrouching ? crouchSpeed : walkSpeed);
+            desiredMoveSpeed = ((!isStuck && isSprinting) || isSliding ? sprintSpeed : isCrouching ? crouchSpeed : walkSpeed);
     }
 
     private float CurrentHeight()

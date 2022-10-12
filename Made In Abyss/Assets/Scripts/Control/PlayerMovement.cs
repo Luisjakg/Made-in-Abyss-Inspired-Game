@@ -316,7 +316,7 @@ public class PlayerMovement : MonoBehaviour
         if (sliding)
         {
             // We get the player look direction in order to make the movement independent from the camera
-            playerLookDirection = playerCam.getCameraLookDirection();
+            //   playerLookDirection = playerCam.getCameraLookDirection();
         }
         else
         {

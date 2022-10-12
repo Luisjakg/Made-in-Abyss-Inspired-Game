@@ -325,7 +325,7 @@ Transform:
   m_GameObject: {fileID: 195091283}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 3.5179083, y: 2.02, z: 0.46516085}
-  m_LocalScale: {x: 1, y: 1, z: 10.633952}
+  m_LocalScale: {x: 3.6113, y: 1, z: 10.633952}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1559382143}
@@ -860,7 +860,7 @@ Transform:
   m_GameObject: {fileID: 618206027}
   m_LocalRotation: {x: -0.70683146, y: -0, z: -0, w: 0.707382}
   m_LocalPosition: {x: 3.5179083, y: 1.6572, z: 5.27}
-  m_LocalScale: {x: 1, y: 1, z: 3.3036005}
+  m_LocalScale: {x: 3.6113, y: 1, z: 3.3036005}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1559382143}
@@ -1679,8 +1679,6 @@ MonoBehaviour:
   canSlide: 1
   canCrouch: 1
   canUseHeadBob: 1
-  canInputHorizontal: 1
-  canInputVertical: 1
   useFootsteps: 1
   isCrouching: 0
   isSliding: 0
@@ -1693,7 +1691,7 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 7
   crouchSpeed: 3.2
-  downSlopeSlideSpeed: 15
+  downSlopeSlideSpeed: 20
   groundDrag: 5
   standingHeight: 2
   currentMoveSpeed: 0
@@ -1705,8 +1703,8 @@ MonoBehaviour:
   maxSlideTime: 1.5
   slideForce: 1
   slideYScale: 0.3
-  slopeIncreaseMultiplier: 2.5
-  speedIncreaseMultiplier: 1.5
+  slopeIncreaseMultiplier: 1.2
+  speedIncreaseMultiplier: 1.2
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
@@ -2013,7 +2011,7 @@ Transform:
   m_GameObject: {fileID: 853919173}
   m_LocalRotation: {x: -0.70683146, y: -0, z: -0, w: 0.707382}
   m_LocalPosition: {x: 3.5179083, y: 1.6572, z: -4.35}
-  m_LocalScale: {x: 1, y: 1, z: 3.3036005}
+  m_LocalScale: {x: 3.6113, y: 1, z: 3.3036005}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1559382143}

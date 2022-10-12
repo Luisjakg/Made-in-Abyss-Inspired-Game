@@ -35,9 +35,5 @@ public class PlayerCam : MonoBehaviour
       transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
       orientation.rotation = Quaternion.Euler(0f, yRotation, 0f);
    }
-
-   public Vector3 getCameraLookDirection()
-   {
-      return transform.forward;
-   }
+   
 }
