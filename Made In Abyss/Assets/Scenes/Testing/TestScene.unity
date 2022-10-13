@@ -1691,7 +1691,7 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 7
   crouchSpeed: 3.2
-  downSlopeSlideSpeed: 20
+  downSlopeSlideSpeed: 30
   groundDrag: 5
   standingHeight: 2
   currentMoveSpeed: 0
@@ -1699,12 +1699,12 @@ MonoBehaviour:
   jumpForce: 10
   jumpCooldown: 0.25
   airMultiplier: 0.4
-  crouchYScale: 0.4
-  maxSlideTime: 1.5
+  crouchYScale: 0.3
   slideForce: 1
   slideYScale: 0.3
   slopeIncreaseMultiplier: 1.2
-  speedIncreaseMultiplier: 1.2
+  slideSpeedUpTime: 3
+  slideSpeedDownTime: 3
   whatIsGround:
     serializedVersion: 2
     m_Bits: 64
@@ -1727,6 +1727,7 @@ MonoBehaviour:
   woodClips: []
   orientation: {fileID: 1158004475}
   playerCam: {fileID: 1947897231}
+  playerCollider: {fileID: 0}
 --- !u!82 &839133528
 AudioSource:
   m_ObjectHideFlags: 0
