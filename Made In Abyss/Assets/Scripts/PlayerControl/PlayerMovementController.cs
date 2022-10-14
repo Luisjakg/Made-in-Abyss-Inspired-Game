@@ -3,7 +3,7 @@ using System.Collections;
 using Obi;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerMovementController : MonoBehaviour
 {
     public bool CanMove { get; private set; } = true;
     private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
