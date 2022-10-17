@@ -1,73 +1,87 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Obi;
 using UnityEngine;
 
-public class ClimbingRopeHandler : MonoBehaviour
+namespace MIA.ClimbingRope
 {
-    private bool shouldThrow => Input.GetKeyDown(throwKey);
-
-    [Header("References")] 
-    [SerializeField] private Transform playerCamera;
-    [SerializeField] private Transform attackPoint;
-    [SerializeField] private GameObject climbingRopePrefab;
-    [SerializeField] private LayerMask playerLayer;
-
-    [Header("Throwing")] 
-    [SerializeField] private bool canThrow = true;
-    [SerializeField] private float throwForce;
-    [SerializeField] private float throwUpwardsForce;
-    [SerializeField] private KeyCode throwKey = KeyCode.Mouse0;
-    private bool readyToThrow;
-    
-    [Header("Settings")] 
-    [SerializeField] private float throwCooldown;
-
-    private void Awake()
+    public class ClimbingRopeHandler : MonoBehaviour
     {
-        readyToThrow = true;
-    }
-
-    private void Update()
-    {
-        if (canThrow) HandleThrow();
-    }
-
-    private void HandleThrow()
-    {
-        if (!shouldThrow) return;
-        if (!readyToThrow) return;
-
-        GameObject projectile = Instantiate(climbingRopePrefab, attackPoint.position, playerCamera.rotation);
-        Vector3 forceDirection;
-
-        // get rigidbody of projectile
-        Rigidbody projectileRB = projectile.GetComponent<Rigidbody>();
-
-        // Calculate direction
-        RaycastHit hit;
-        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, 500f, playerLayer))
-        {
-            Debug.Log(hit.point);
-            forceDirection = (hit.point - attackPoint.position).normalized;
-        }
-        else forceDirection = playerCamera.transform.forward;
-
-        //Add force to projectile
-        Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardsForce;
-        projectileRB.AddForce(forceToAdd, ForceMode.Impulse);
+        private bool shouldRetract => Input.GetKey(retractRope);
+        private bool shouldExtend => Input.GetKey(extendRope);
         
-        Invoke(nameof(ResetThrow), throwCooldown);
-    }
-    
-    private void ResetThrow()
-    {
-        readyToThrow = true;
+        [Header("Functional Options")] 
+        [SerializeField] private bool canChangeSize = true;
+        
+        [Header("Controls")] 
+        [SerializeField] private KeyCode retractRope = KeyCode.Mouse0;
+        [SerializeField] private KeyCode extendRope = KeyCode.Mouse1;
+
+        [Header("Size Change Control")] [SerializeField]
+        private float airExtendMultiplier = .8f;
+        [SerializeField] private float retractSpeed;
+        [SerializeField] private float extendSpeed;
+        
+        [Header("References")]
+        [SerializeField] private GameObject rope;
+        [SerializeField] private ObiSolver obiSolver;
+        [SerializeField] private GameObject hook;
+        private ObiRopeCursor ropeCursor;
+        private ObiCollider player;
+        private Vector3 startGravityValue;
+        private ObiParticleAttachment[] particleAttachments;
+
+        private void Awake()
+        {
+            particleAttachments = rope.GetComponents<ObiParticleAttachment>();
+            ropeCursor = rope.GetComponent<ObiRopeCursor>();
+            player = GameObject.FindGameObjectWithTag("Player").GetComponent<ObiCollider>();
+        }
+
+        void Start()
+        {
+            AttachRopeToPlayer();
+        }
+
+        void Update()
+        {
+            if (!rope.GetComponent<ObiRope>().isLoaded) return;
+
+            if (!hook.GetComponent<Hook>().GetTargetHit())
+                ExtendRope(hook.GetComponent<Hook>().GetMoveSpeed() * airExtendMultiplier);
+
+            if (canChangeSize) HandleRopeLength();
+
+        }
+
+        private void AttachRopeToPlayer()
+        {
+            particleAttachments[1].target = player.transform;
+        }
+
+        private void HandleRopeLength()
+        {
+            if (shouldExtend && shouldRetract) return;
+            if (shouldRetract) RetractRope(retractSpeed);
+            else if (shouldExtend) ExtendRope(extendSpeed);
+        }
+
+        private void RetractRope(float velocity)
+        {
+            Debug.Log("Retracting");
+            ropeCursor.ChangeLength(rope.GetComponent<ObiRope>().restLength - velocity * Time.deltaTime);
+        }
+        
+        private void ExtendRope(float velocity)
+        {
+            Debug.Log("Extending");
+            ropeCursor.ChangeLength(rope.GetComponent<ObiRope>().restLength + velocity * Time.deltaTime);
+        }
+
+        public GameObject GetHook()
+        {
+            return hook; 
+        }
     }
 }
-
-
-
-
-
-

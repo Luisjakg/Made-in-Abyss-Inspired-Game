@@ -7,6 +7,8 @@ TagManager:
   - Footsteps/GRASS
   - Footsteps/STONE
   - Footsteps/WOOD
+  - Rope/PLAYER
+  - Rope/PLAYER/ATTACHPOINT
   layers:
   - Default
   - TransparentFX
