@@ -1914,7 +1914,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   thickness: 0
   material: {fileID: 0}
-  filter: -65535
+  filter: 1
   m_SourceCollider: {fileID: 839133526}
   m_DistanceField: {fileID: 0}
 --- !u!114 &839133531

@@ -5,35 +5,43 @@ using Obi;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Hook : MonoBehaviour
+namespace MIA.ClimbingRope
 {
-    private Rigidbody rb;
-    private bool targetHit = false;
-    private Quaternion desiredRotation;
-
-    private void Awake()
+    public class Hook : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
-    }
+        private Rigidbody rb;
+        private bool isTargetHit;
+        private Quaternion desiredRotation;
 
-    private void OnCollisionEnter(Collision other)
-    {
-        if (targetHit) return;
+        private void Awake()
+        {
+            rb = GetComponent<Rigidbody>();
+        }
+
+        private void Start()
+        {
+            isTargetHit = false;
+        }
+
+        private void OnCollisionEnter(Collision other)
+        {
+            if (isTargetHit) return;
         
-        targetHit = true;
+            isTargetHit = true;
 
-        rb.isKinematic = true;
+            rb.isKinematic = true;
 
-        transform.SetParent(other.transform);
-    }
+            transform.SetParent(other.transform);
+        }
 
-    public bool GetTargetHit()
-    {
-        return targetHit;
-    }
+        public bool GetIsTargetHit()
+        {
+            return isTargetHit;
+        }
 
-    public float GetMoveSpeed()
-    {
-        return rb.velocity.magnitude;
+        public float GetMoveSpeed()
+        {
+            return rb.velocity.magnitude;
+        }
     }
 }

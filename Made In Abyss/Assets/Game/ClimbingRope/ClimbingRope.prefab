@@ -98,7 +98,7 @@ MonoBehaviour:
   _maxCompression: 0
   _bendConstraintsEnabled: 1
   _bendCompliance: 0
-  _maxBending: 0.025
+  _maxBending: 0.2
   _plasticYield: 0
   _plasticCreep: 0
 --- !u!23 &979318963526315308
@@ -449,7 +449,8 @@ MonoBehaviour:
   retractRope: 323
   extendRope: 324
   airExtendMultiplier: 0.8
-  minimumRopeSize: 0.4
+  minimumRopeSize: 0.7
+  maxRopeSize: 35
   retractSpeed: 2
   extendSpeed: 2
   rope: {fileID: 979318963526315307}

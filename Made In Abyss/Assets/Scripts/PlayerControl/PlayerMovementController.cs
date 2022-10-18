@@ -2,467 +2,494 @@ using System;
 using System.Collections;
 using Obi;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-public class PlayerMovementController : MonoBehaviour
+namespace MIA.PlayerControl
 {
-    public bool CanMove { get; private set; } = true;
-    private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
-    private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
-    private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
-    private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting;
-
-    [Header("Functional Options")] 
-    [SerializeField] private bool canSprint = true;
-    [SerializeField] private bool canJump = true;
-    [SerializeField] private bool canSlide = true;
-    [SerializeField] private bool canCrouch = true;
-    [SerializeField] private bool canUseHeadBob = true;
-    [SerializeField] private bool useFootsteps = true;
-    
-    [Header("States")]
-    [SerializeField] private bool isCrouching;
-    [SerializeField] private bool isSliding;
-    [SerializeField] private bool isJumping;
-    [SerializeField] private bool isSprinting;
-
-    [Header("Controls")] 
-    [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
-    [SerializeField] private KeyCode jumpKey = KeyCode.Space;
-    [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
-    [SerializeField] private KeyCode slideKey = KeyCode.C;
-
-    [Header("Movement Parameters")] 
-    [SerializeField] private float walkSpeed = 3.0f;
-    [SerializeField] private float sprintSpeed = 6.0f;
-    [SerializeField] private float crouchSpeed = 2.0f;
-    [SerializeField] private float downSlopeSlideSpeed = 15f;
-    [SerializeField] private float groundDrag = 5f;
-    [SerializeField] private float standingHeight = 2.0f;
-    [SerializeField] private float currentMoveSpeed = 0f;
-    [SerializeField] private float desiredMoveSpeed; 
-    private float currentSpeedMagnitude;
-    private float lastDesiredMoveSpeed;
-    private Vector3 moveDirection;
-
-    [Header("Jumping Parameters")] 
-    [SerializeField] private float jumpForce = 8.0f;
-    [SerializeField] private float jumpCooldown = 0f;
-    [SerializeField] private float airMultiplier = 0.5f;
-    private bool readyToJump;
-
-    [Header("Crouch Parameters")]
-    [SerializeField] private float crouchYScale = .4f;
-    private float startYScale;
-    private bool isStuck;
-
-    [Header("Sliding Parameters")]
-    [SerializeField] private float slideForce = 200f;
-    [SerializeField] private float slideYScale = .3f;
-    [SerializeField] private float slopeIncreaseMultiplier;
-    [SerializeField] private float slideSpeedUpTime = 1f;
-    [SerializeField] private float slideSpeedDownTime = 1f;
-    private float lerpSpeed;
-
-    [Header("GroundCheck")] 
-    [SerializeField] private LayerMask whatIsGround;
-    [SerializeField] private bool isGrounded;
-
-    [Header("Slope Handling")] 
-    [SerializeField, Range(0f, 90f)] private float maxSlopeAngle = 40f;
-    [SerializeField, Range(0f, 90f)] private float slideSpeedUpSlopeAngle = 20f;
-    private RaycastHit slopeHit;
-    private bool exitingSlope;
-    private float slopeAngle;
-    
-    [Header("HeadBob Parameters")] 
-    [SerializeField] private float walkBobSpeed = 14f;
-    [SerializeField] private float walkBobAmount = .05f;
-    [SerializeField] private float sprintBobSpeed = 18f;
-    [SerializeField] private float sprintBobAmount = .1f;
-    [SerializeField] private float crouchBobSpeed = 8f;
-    [SerializeField] private float crouchBobAmount = .025f;
-    private float defaultYPos = 0;
-    private float headBobTimer;
-
-    [Header("Footstep Parameters")] 
-    [SerializeField] private float baseStepSpeed = .05f;
-    [SerializeField] private float crouchStepMultiplier = 1.5f;
-    [SerializeField] private float sprintStepMultiplier = 0.6f;
-    [SerializeField] private AudioSource footstepAudioSource = default;
-    [SerializeField] private AudioClip[] grassClips = default;
-    [SerializeField] private AudioClip[] stoneClips = default;
-    [SerializeField] private AudioClip[] woodClips = default;
-    private float footstepTimer = 0;
-    private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
-        isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
-
-    [Header("Orientation")] 
-    [SerializeField] private Transform orientation;
-    [SerializeField] private Camera playerCam;
-    [SerializeField] private Collider playerCollider;
-    private Vector3 playerLookDirection;
-    private float horizontalInput;
-    private float verticalInput;
-
-    private Rigidbody rb;
-
-    private void Awake()
+    public class PlayerMovementController : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-        readyToJump = true;
-        startYScale = transform.localScale.y;
-    }
+        public bool CanMove { get; private set; } = true;
+        private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
+        private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
+        private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
+        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting;
 
-    private void Update()
-    {
-        currentSpeedMagnitude = rb.velocity.magnitude;
-        isSprinting = shouldSprint && canSprint && !isSliding && !isCrouching;
-        DesiredMoveSpeed();
-        
-        //ground check
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround);
+        [Header("Functional Options")] [SerializeField]
+        private bool canSprint = true;
 
-        if (CanMove) HandleMovementInput();
+        [SerializeField] private bool canJump = true;
+        [SerializeField] private bool canSlide = true;
+        [SerializeField] private bool canCrouch = true;
+        [SerializeField] private bool canUseHeadBob = true;
+        [SerializeField] private bool useFootsteps = true;
 
-        if (canSprint) HandleSprint();
-        
-        SpeedControl();
+        [Header("States")] [SerializeField] private bool isCrouching;
+        [SerializeField] private bool isSliding;
+        [SerializeField] private bool isJumping;
+        [SerializeField] private bool isSprinting;
 
-        if (canJump) HandleJump();
+        [Header("Controls")] [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
+        [SerializeField] private KeyCode jumpKey = KeyCode.Space;
+        [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
+        [SerializeField] private KeyCode slideKey = KeyCode.C;
 
-        if (canSlide) HandleSlide();
+        [Header("Movement Parameters")] [SerializeField]
+        private float walkSpeed = 3.0f;
 
-        if (canCrouch) HandleCrouch();
+        [SerializeField] private float sprintSpeed = 6.0f;
+        [SerializeField] private float crouchSpeed = 2.0f;
+        [SerializeField] private float downSlopeSlideSpeed = 15f;
+        [SerializeField] private float groundDrag = 5f;
+        [SerializeField] private float standingHeight = 2.0f;
+        [SerializeField] private float currentMoveSpeed = 0f;
+        [SerializeField] private float desiredMoveSpeed;
+        private float currentSpeedMagnitude;
+        private float lastDesiredMoveSpeed;
+        private Vector3 moveDirection;
 
-        if (canUseHeadBob) HandleHeadBob();
+        [Header("Jumping Parameters")] [SerializeField]
+        private float jumpForce = 8.0f;
 
-        if (useFootsteps) HandleFootsteps();
-        
-        //handle drag
+        [SerializeField] private float jumpCooldown = 0f;
+        [SerializeField] private float airMultiplier = 0.5f;
+        private bool readyToJump;
 
-        if (isGrounded)
-            rb.drag = groundDrag;
-        else
-            rb.drag = 0;
+        [Header("Crouch Parameters")] [SerializeField]
+        private float crouchYScale = .4f;
 
-    }
+        private float startYScale;
+        private bool isStuck;
 
-    private void FixedUpdate()
-    {
-        if (isSliding)
-            SlidingMovement(); 
-        
-        ApplyFinalMovements();
-    }
+        [Header("Sliding Parameters")] [SerializeField]
+        private float slideForce = 200f;
 
-    private void HandleMovementInput()
-    {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
+        [SerializeField] private float slideYScale = .3f;
+        [SerializeField] private float slopeIncreaseMultiplier;
+        [SerializeField] private float slideSpeedUpTime = 1f;
+        [SerializeField] private float slideSpeedDownTime = 1f;
+        private float lerpSpeed;
 
-        verticalInput = Input.GetAxisRaw("Vertical");
+        [Header("GroundCheck")] [SerializeField]
+        private LayerMask whatIsGround;
 
-        if (shouldSlide)
-            moveDirection = playerCam.transform.forward;
-        else if (!isSliding)
-            moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-    }
-    
-    private void HandleSprint()
-    {
-        if (!shouldSprint) return;
-        bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
-        if (isCrouching && !roofAbove) StopCrouch();
-        if (Input.GetKeyDown(sprintKey) && isSliding && !roofAbove) StopSlide();
-    }
-    
-    private void HandleJump()
-    {
-        if (!shouldJump || !readyToJump) return;
-        bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
-        if(isSliding && !roofAbove) StopSlide();
+        [SerializeField] private bool isGrounded;
 
-        isJumping = true;
-        readyToJump = false;
-        exitingSlope = true;
+        [Header("Slope Handling")] [SerializeField, Range(0f, 90f)]
+        private float maxSlopeAngle = 40f;
 
-        //reset y velocity
-        rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-        
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-        
-        Invoke(nameof(ResetJump), jumpCooldown);
-    }
+        [SerializeField, Range(0f, 90f)] private float slideSpeedUpSlopeAngle = 20f;
+        private RaycastHit slopeHit;
+        private bool exitingSlope;
+        private float slopeAngle;
 
-    private void ResetJump()
-    {
-        isJumping = false;
-        readyToJump = true;
-        exitingSlope = false;
-    }
-    
-    private void HandleSlide()
-    {
-        // We check the current speed to avoid overlap with crouch
-        if (!shouldSlide) return;
-        if (isCrouching || !isGrounded) return;
-        if (!isSliding && isSprinting && currentSpeedMagnitude > 0.5f) StartSlide();
-        else StopSlideWithCrouch();
-    }
+        [Header("HeadBob Parameters")] [SerializeField]
+        private float walkBobSpeed = 14f;
 
-    private void StartSlide()
-    {
-        isSliding = true;
+        [SerializeField] private float walkBobAmount = .05f;
+        [SerializeField] private float sprintBobSpeed = 18f;
+        [SerializeField] private float sprintBobAmount = .1f;
+        [SerializeField] private float crouchBobSpeed = 8f;
+        [SerializeField] private float crouchBobAmount = .025f;
+        private float defaultYPos = 0;
+        private float headBobTimer;
 
-        //If the user is in the air then we dont add downwards force in order to avoid weird movement
-        if (isGrounded)
-            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
-        
-        transform.localScale = new Vector3(transform.localScale.x, slideYScale, transform.localScale.z);
-        
-    }
+        [Header("Footstep Parameters")] [SerializeField]
+        private float baseStepSpeed = .05f;
 
-    private void StopSlideWithCrouch()
-    {
-        StopAllCoroutines();
-        isSliding = false;
-        StartCrouch();
-    }
+        [SerializeField] private float crouchStepMultiplier = 1.5f;
+        [SerializeField] private float sprintStepMultiplier = 0.6f;
+        [SerializeField] private AudioSource footstepAudioSource = default;
+        [SerializeField] private AudioClip[] grassClips = default;
+        [SerializeField] private AudioClip[] stoneClips = default;
+        [SerializeField] private AudioClip[] woodClips = default;
+        private float footstepTimer = 0;
 
-    private void StopSlide()
-    {
-        StopAllCoroutines();
-        isSliding = false;
-        canSprint = true;
+        private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
+            isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
-        transform.localScale = new(transform.localScale.x, startYScale, transform.localScale.z);
-    }
-    
-    private void HandleCrouch()
-    {
-        if (!shouldCrouch) return;
-        if (isSprinting || isSliding || desiredMoveSpeed > walkSpeed) return;
-        if (!isCrouching) StartCrouch();
-        else StopCrouch();
-    }
+        [Header("Orientation")] [SerializeField]
+        private Transform orientation;
 
-    private void StartCrouch()
-    {
-        transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
-        rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
-        isCrouching = true;
-    }
+        [SerializeField] private Camera playerCam;
+        [SerializeField] private Collider playerCollider;
+        private Vector3 playerLookDirection;
+        private float horizontalInput;
+        private float verticalInput;
 
-    private void StopCrouch()
-    {
-        Debug.Log("Stopping Crouch");
-        if (Physics.Raycast(transform.position, Vector3.up, 1.2f))
+        private Rigidbody rb;
+
+        private void Awake()
         {
-            isStuck = true;
-            return;
-        }
-        isStuck = false;
-        canSprint = true;
-        transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
-        isCrouching = false;
-    }
-
-    private void HandleHeadBob()
-    {
-        if (!isGrounded || isSliding) return;
-
-        if (Math.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f)
-        {
-            headBobTimer += Time.deltaTime * (isCrouching ? crouchBobSpeed : shouldSprint ? sprintBobSpeed : walkBobSpeed);
-            playerCam.transform.localPosition = new Vector3(playerCam.transform.localPosition.x,
-                defaultYPos + (isCrouching ? crouchBobAmount : shouldSprint ? sprintBobAmount : walkBobAmount) *
-                Mathf.Sin(headBobTimer),
-                playerCam.transform.localPosition.z);
-        }
-    }
-    
-    private void HandleFootsteps()
-    {
-        if (!isGrounded || isSliding) return;
-        if (currentSpeedMagnitude < 1f) return;
-
-        footstepTimer -= Time.deltaTime;
-
-        if (footstepTimer <= 0)
-        {
-            if (Physics.Raycast(playerCam.transform.position, Vector3.down, out RaycastHit hit, 3))
-            {
-                switch (hit.collider.tag)
-                {
-                    case "Footsteps/GRASS":
-                        footstepAudioSource.PlayOneShot(grassClips[UnityEngine.Random.Range(0, woodClips.Length - 1)]);
-                        break;
-                    case "Footsteps/STONE":
-                        footstepAudioSource.PlayOneShot(stoneClips[UnityEngine.Random.Range(0, stoneClips.Length - 1)]);
-                        break;
-                    case "Footsteps/WOOD":
-                        footstepAudioSource.PlayOneShot(woodClips[UnityEngine.Random.Range(0, woodClips.Length - 1)]);
-                        break;
-                    default:
-                        footstepAudioSource.PlayOneShot(stoneClips[UnityEngine.Random.Range(0, stoneClips.Length - 1)]);
-                        break;
-                }
-            }
-            footstepTimer = GetCurrentOffSet;
-        }
-    }
-    
-    private void ApplyFinalMovements()
-    {
-        //Turn off gravity while in slope
-        rb.useGravity = !OnSlope();
-        // on slope
-        if (OnSlope() && !exitingSlope)
-        {
-            rb.AddForce(GetSlopeMoveDirection(moveDirection) * currentMoveSpeed * 20f, ForceMode.Force);
-            
-            //We add force to avoid weird bouncing while going down slopes
-            if (rb.velocity.y > 0)
-                rb.AddForce(Vector3.down * (isCrouching ? 40f : 80f), ForceMode.Force);
+            rb = GetComponent<Rigidbody>();
+            rb.freezeRotation = true;
+            readyToJump = true;
+            startYScale = transform.localScale.y;
         }
 
-        //on ground
-        else if (isGrounded)
-            rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f, ForceMode.Force);
-        
-        // in air
-        else if (!isGrounded)
-            rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
-    }
-
-
-    private void SlidingMovement()
-    {
-        Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
-        // normal sliding
-        if (!OnSlope() || rb.velocity.y > -0.1f)
+        private void Update()
         {
-            rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
-        }
-        else
-            rb.AddForce(GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+            currentSpeedMagnitude = rb.velocity.magnitude;
+            isSprinting = shouldSprint && canSprint && !isSliding && !isCrouching;
+            DesiredMoveSpeed();
 
+            //ground check
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround);
 
-        if (currentSpeedMagnitude <= crouchSpeed && isGrounded)
-            StopSlideWithCrouch();
-    }
+            if (CanMove) HandleMovementInput();
 
-    private void SpeedControl()
-    {
-        // limiting speed on slope
-        if (OnSlope() && !exitingSlope)
-        {
-            if (currentSpeedMagnitude > currentMoveSpeed)
-                rb.velocity = rb.velocity.normalized * currentMoveSpeed;
+            if (canSprint) HandleSprint();
+
+            SpeedControl();
+
+            if (canJump) HandleJump();
+
+            if (canSlide) HandleSlide();
+
+            if (canCrouch) HandleCrouch();
+
+            if (canUseHeadBob) HandleHeadBob();
+
+            if (useFootsteps) HandleFootsteps();
+
+            //handle drag
+
+            if (isGrounded)
+                rb.drag = groundDrag;
+            else
+                rb.drag = 0;
+
         }
 
-        // limiting speed on ground or in air
-        else
+        private void FixedUpdate()
         {
-            Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+            if (isSliding)
+                SlidingMovement();
 
-            // limit velocity if needed
-            if (flatVel.magnitude > currentMoveSpeed)
-            {
-                Vector3 limitedVel = flatVel.normalized * currentMoveSpeed;
-                rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
-            }
+            ApplyFinalMovements();
         }
-        
-        // check if desiredMoveSpeed has changed drastically
-        if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && currentMoveSpeed != 0)
+
+        private void HandleMovementInput()
+        {
+            horizontalInput = Input.GetAxisRaw("Horizontal");
+
+            verticalInput = Input.GetAxisRaw("Vertical");
+
+            if (shouldSlide)
+                moveDirection = playerCam.transform.forward;
+            else if (!isSliding)
+                moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        }
+
+        private void HandleSprint()
+        {
+            if (!shouldSprint) return;
+            bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
+            if (isCrouching && !roofAbove) StopCrouch();
+            if (Input.GetKeyDown(sprintKey) && isSliding && !roofAbove) StopSlide();
+        }
+
+        private void HandleJump()
+        {
+            if (!shouldJump || !readyToJump) return;
+            bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
+            if (isSliding && !roofAbove) StopSlide();
+
+            isJumping = true;
+            readyToJump = false;
+            exitingSlope = true;
+
+            //reset y velocity
+            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+
+            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        private void ResetJump()
+        {
+            isJumping = false;
+            readyToJump = true;
+            exitingSlope = false;
+        }
+
+        private void HandleSlide()
+        {
+            // We check the current speed to avoid overlap with crouch
+            if (!shouldSlide) return;
+            if (isCrouching || !isGrounded) return;
+            if (!isSliding && isSprinting && currentSpeedMagnitude > 0.5f) StartSlide();
+            else StopSlideWithCrouch();
+        }
+
+        private void StartSlide()
+        {
+            isSliding = true;
+
+            //If the user is in the air then we dont add downwards force in order to avoid weird movement
+            if (isGrounded)
+                rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+
+            transform.localScale = new Vector3(transform.localScale.x, slideYScale, transform.localScale.z);
+
+        }
+
+        private void StopSlideWithCrouch()
         {
             StopAllCoroutines();
-            StartCoroutine(SmoothlyLerpMoveSpeed(lerpSpeed));
-        }
-        else
-        {
-            currentMoveSpeed = desiredMoveSpeed;
+            isSliding = false;
+            StartCrouch();
         }
 
-        lastDesiredMoveSpeed = desiredMoveSpeed;
-    }
-    
-    private IEnumerator SmoothlyLerpMoveSpeed(float duration)
-    {
-        // TODO keep momentum when jumping while fast & moving forward
-        bool decreasing;
-        float elapsed = 0.0f;
-        float startSpeed = currentMoveSpeed;
-        float endSpeed = desiredMoveSpeed;
-        
-        if (startSpeed > endSpeed) decreasing = true;
-        else decreasing = false;
-
-        while (elapsed < duration )
+        private void StopSlide()
         {
-            currentMoveSpeed = Mathf.Lerp( startSpeed, endSpeed, elapsed / duration );
-            if (OnSlope())
+            StopAllCoroutines();
+            isSliding = false;
+            canSprint = true;
+
+            transform.localScale = new(transform.localScale.x, startYScale, transform.localScale.z);
+        }
+
+        private void HandleCrouch()
+        {
+            if (!shouldCrouch) return;
+            if (isSprinting || isSliding || desiredMoveSpeed > walkSpeed) return;
+            if (!isCrouching) StartCrouch();
+            else StopCrouch();
+        }
+
+        private void StartCrouch()
+        {
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            isCrouching = true;
+        }
+
+        private void StopCrouch()
+        {
+            Debug.Log("Stopping Crouch");
+            if (Physics.Raycast(transform.position, Vector3.up, 1.2f))
             {
-                float slopeAngleIncrease = 1 + (slopeAngle / 90f);
-                elapsed += Time.deltaTime * slopeIncreaseMultiplier * slopeAngleIncrease;
+                isStuck = true;
+                return;
+            }
+
+            isStuck = false;
+            canSprint = true;
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            isCrouching = false;
+        }
+
+        private void HandleHeadBob()
+        {
+            if (!isGrounded || isSliding) return;
+
+            if (Math.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f)
+            {
+                headBobTimer += Time.deltaTime *
+                                (isCrouching ? crouchBobSpeed : shouldSprint ? sprintBobSpeed : walkBobSpeed);
+                playerCam.transform.localPosition = new Vector3(playerCam.transform.localPosition.x,
+                    defaultYPos + (isCrouching ? crouchBobAmount : shouldSprint ? sprintBobAmount : walkBobAmount) *
+                    Mathf.Sin(headBobTimer),
+                    playerCam.transform.localPosition.z);
+            }
+        }
+
+        private void HandleFootsteps()
+        {
+            if (!isGrounded || isSliding) return;
+            if (currentSpeedMagnitude < 1f) return;
+
+            footstepTimer -= Time.deltaTime;
+
+            if (footstepTimer <= 0)
+            {
+                if (Physics.Raycast(playerCam.transform.position, Vector3.down, out RaycastHit hit, 3))
+                {
+                    switch (hit.collider.tag)
+                    {
+                        case "Footsteps/GRASS":
+                            footstepAudioSource.PlayOneShot(
+                                grassClips[Random.Range(0, woodClips.Length - 1)]);
+                            break;
+                        case "Footsteps/STONE":
+                            footstepAudioSource.PlayOneShot(
+                                stoneClips[Random.Range(0, stoneClips.Length - 1)]);
+                            break;
+                        case "Footsteps/WOOD":
+                            footstepAudioSource.PlayOneShot(
+                                woodClips[Random.Range(0, woodClips.Length - 1)]);
+                            break;
+                        default:
+                            footstepAudioSource.PlayOneShot(
+                                stoneClips[Random.Range(0, stoneClips.Length - 1)]);
+                            break;
+                    }
+                }
+
+                footstepTimer = GetCurrentOffSet;
+            }
+        }
+
+        private void ApplyFinalMovements()
+        {
+            //Turn off gravity while in slope
+            rb.useGravity = !OnSlope();
+            // on slope
+            if (OnSlope() && !exitingSlope)
+            {
+                rb.AddForce(GetSlopeMoveDirection(moveDirection) * currentMoveSpeed * 20f, ForceMode.Force);
+
+                //We add force to avoid weird bouncing while going down slopes
+                if (rb.velocity.y > 0)
+                    rb.AddForce(Vector3.down * (isCrouching ? 40f : 80f), ForceMode.Force);
+            }
+
+            //on ground
+            else if (isGrounded)
+                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f, ForceMode.Force);
+
+            // in air
+            else if (!isGrounded)
+                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
+        }
+
+
+        private void SlidingMovement()
+        {
+            Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+
+            // normal sliding
+            if (!OnSlope() || rb.velocity.y > -0.1f)
+            {
+                rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
             }
             else
-                elapsed += Time.deltaTime;
-            
-            
-            
-            yield return null;
-        }
-        currentMoveSpeed = endSpeed;
-    }
+                rb.AddForce(GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
 
-    private bool OnSlope()
-    {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, standingHeight * 0.5f + 0.3f))
-        {
-            slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
-            return slopeAngle < maxSlopeAngle && slopeAngle != 0;
+
+            if (currentSpeedMagnitude <= crouchSpeed && isGrounded)
+                StopSlideWithCrouch();
         }
 
-        return false;
-    }
-    
-    private Vector3 GetSlopeMoveDirection(Vector3 direction)
-    {
-        return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
-    }
+        private void SpeedControl()
+        {
+            // limiting speed on slope
+            if (OnSlope() && !exitingSlope)
+            {
+                if (currentSpeedMagnitude > currentMoveSpeed)
+                    rb.velocity = rb.velocity.normalized * currentMoveSpeed;
+            }
 
-    private void DesiredMoveSpeed()
-    {
-        if (isSliding && OnSlope() && rb.velocity.y < -3f && slopeAngle > slideSpeedUpSlopeAngle)
-        {
-            desiredMoveSpeed = downSlopeSlideSpeed;
-            lerpSpeed = slideSpeedUpTime;
-        }
-        else if (isSliding && OnSlope() && slopeAngle < slideSpeedUpSlopeAngle)
-        {
-            lerpSpeed = slideSpeedDownTime;
-            desiredMoveSpeed = .0f;
-        }
-        else if (isSliding && OnSlope() && rb.velocity.y > 0f)
-        {
-            lerpSpeed = slideSpeedDownTime;
-            desiredMoveSpeed = .0f;
-        }
-        else if (isSliding && isGrounded)
-        {
-            lerpSpeed = slideSpeedDownTime;
-            desiredMoveSpeed = .0f;
-        }
-        else
-            desiredMoveSpeed = ((!isStuck && isSprinting) || isSliding ? sprintSpeed : isCrouching ? crouchSpeed : walkSpeed);
-    }
+            // limiting speed on ground or in air
+            else
+            {
+                Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
-    private float CurrentHeight()
-    {
-        float currentHeight = (isCrouching ? crouchYScale + 1 : isSliding ? slideYScale + 1 : standingHeight);
-        return currentHeight; 
+                // limit velocity if needed
+                if (flatVel.magnitude > currentMoveSpeed)
+                {
+                    Vector3 limitedVel = flatVel.normalized * currentMoveSpeed;
+                    rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
+                }
+            }
+
+            // check if desiredMoveSpeed has changed drastically
+            if (Mathf.Abs(desiredMoveSpeed - lastDesiredMoveSpeed) > 4f && currentMoveSpeed != 0)
+            {
+                StopAllCoroutines();
+                StartCoroutine(SmoothlyLerpMoveSpeed(lerpSpeed));
+            }
+            else
+            {
+                currentMoveSpeed = desiredMoveSpeed;
+            }
+
+            lastDesiredMoveSpeed = desiredMoveSpeed;
+        }
+
+        private IEnumerator SmoothlyLerpMoveSpeed(float duration)
+        {
+            // TODO keep momentum when jumping while fast & moving forward
+            bool decreasing;
+            float elapsed = 0.0f;
+            float startSpeed = currentMoveSpeed;
+            float endSpeed = desiredMoveSpeed;
+
+            if (startSpeed > endSpeed) decreasing = true;
+            else decreasing = false;
+
+            while (elapsed < duration)
+            {
+                currentMoveSpeed = Mathf.Lerp(startSpeed, endSpeed, elapsed / duration);
+                if (OnSlope())
+                {
+                    float slopeAngleIncrease = 1 + (slopeAngle / 90f);
+                    elapsed += Time.deltaTime * slopeIncreaseMultiplier * slopeAngleIncrease;
+                }
+                else
+                    elapsed += Time.deltaTime;
+
+
+
+                yield return null;
+            }
+
+            currentMoveSpeed = endSpeed;
+        }
+
+        private bool OnSlope()
+        {
+            if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, standingHeight * 0.5f + 0.3f))
+            {
+                slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
+                return slopeAngle < maxSlopeAngle && slopeAngle != 0;
+            }
+
+            return false;
+        }
+
+        private Vector3 GetSlopeMoveDirection(Vector3 direction)
+        {
+            return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
+        }
+
+        private void DesiredMoveSpeed()
+        {
+            if (isSliding && OnSlope() && rb.velocity.y < -3f && slopeAngle > slideSpeedUpSlopeAngle)
+            {
+                desiredMoveSpeed = downSlopeSlideSpeed;
+                lerpSpeed = slideSpeedUpTime;
+            }
+            else if (isSliding && OnSlope() && slopeAngle < slideSpeedUpSlopeAngle)
+            {
+                lerpSpeed = slideSpeedDownTime;
+                desiredMoveSpeed = .0f;
+            }
+            else if (isSliding && OnSlope() && rb.velocity.y > 0f)
+            {
+                lerpSpeed = slideSpeedDownTime;
+                desiredMoveSpeed = .0f;
+            }
+            else if (isSliding && isGrounded)
+            {
+                lerpSpeed = slideSpeedDownTime;
+                desiredMoveSpeed = .0f;
+            }
+            else
+                desiredMoveSpeed = ((!isStuck && isSprinting) || isSliding ? sprintSpeed :
+                    isCrouching ? crouchSpeed : walkSpeed);
+        }
+
+        private float CurrentHeight()
+        {
+            float currentHeight = (isCrouching ? crouchYScale + 1 : isSliding ? slideYScale + 1 : standingHeight);
+            return currentHeight;
+        }
+
+        public bool GetIsGrounded()
+        {
+            return isGrounded;
+        }
     }
 }

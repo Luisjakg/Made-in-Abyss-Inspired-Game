@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using MIA.PlayerControl;
 using Obi;
 using UnityEngine;
 
@@ -21,23 +22,27 @@ namespace MIA.ClimbingRope
         [Header("Size Change Control")]
         [SerializeField] private float airExtendMultiplier = .8f;
         [SerializeField] private float minimumRopeSize = .4f;
+        [SerializeField] private float maxRopeSize = 2f;
         [SerializeField] private float retractSpeed;
         [SerializeField] private float extendSpeed;
+        private float currentRopeSize;
         
         [Header("References")]
         [SerializeField] private GameObject rope;
         [SerializeField] private ObiSolver obiSolver;
         [SerializeField] private GameObject hook;
         private ObiRopeCursor ropeCursor;
-        private ObiCollider player;
+        private PlayerMovementController playerMovementController;
+        private GameObject player;
         private Vector3 startGravityValue;
-        private ObiParticleAttachment[] particleAttachments;
+        private ObiParticleAttachment[] particleAttachments; //0 is for hook & 1 is for player
         
         private void Awake()
         {
             particleAttachments = rope.GetComponents<ObiParticleAttachment>();
             ropeCursor = rope.GetComponent<ObiRopeCursor>();
-            player = GameObject.FindGameObjectWithTag("Player").GetComponent<ObiCollider>();
+            player = GameObject.FindGameObjectWithTag("Player");
+            playerMovementController = player.GetComponent<PlayerMovementController>();
         }
         
         void Start()
@@ -47,10 +52,15 @@ namespace MIA.ClimbingRope
         
         void Update()
         {
-            Debug.Log(rope.GetComponent<ObiRope>().restLength);
             if (!rope.GetComponent<ObiRope>().isLoaded) return;
-            if (!hook.GetComponent<Hook>().GetTargetHit())
+
+            currentRopeSize = rope.GetComponent<ObiRope>().restLength;
+            
+            if (!hook.GetComponent<Hook>().GetIsTargetHit())
                 ExtendRope(hook.GetComponent<Hook>().GetMoveSpeed() * airExtendMultiplier);
+            
+            HandleParticleAttachments();
+            
             if (canChangeSize) HandleRopeLength();
         }
         
@@ -62,21 +72,32 @@ namespace MIA.ClimbingRope
         private void HandleRopeLength()
         {
             if (shouldExtend && shouldRetract) return;
-            if (shouldRetract && !(rope.GetComponent<ObiRope>().restLength <= minimumRopeSize))
+            if (shouldRetract && !(currentRopeSize <= minimumRopeSize))
                 RetractRope(retractSpeed);
             else if (shouldExtend) ExtendRope(extendSpeed);
         }
         
         private void RetractRope(float velocity)
         {
-            Debug.Log("Retracting Rope");
-            ropeCursor.ChangeLength(rope.GetComponent<ObiRope>().restLength - velocity * Time.deltaTime);
+            ropeCursor.ChangeLength(currentRopeSize - velocity * Time.deltaTime);
         }
         
         private void ExtendRope(float velocity)
         {
-            Debug.Log("Extending Rope");
-            ropeCursor.ChangeLength(rope.GetComponent<ObiRope>().restLength + velocity * Time.deltaTime);
+            ropeCursor.ChangeLength(currentRopeSize + velocity * Time.deltaTime);
+        }
+
+        private void HandleParticleAttachments()
+        {
+            if (currentRopeSize >= maxRopeSize && !hook.GetComponent<Hook>().GetIsTargetHit())
+                particleAttachments[0].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
+            else
+                particleAttachments[0].attachmentType = ObiParticleAttachment.AttachmentType.Static;
+            
+            if (hook.GetComponent<Hook>().GetIsTargetHit())
+                particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
+            else
+                particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Static;
         }
         
         public GameObject GetHook()
