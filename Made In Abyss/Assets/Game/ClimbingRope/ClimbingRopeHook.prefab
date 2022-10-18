@@ -95,8 +95,6 @@ GameObject:
   - component: {fileID: 1350884882347582348}
   - component: {fileID: 2926589214061704624}
   - component: {fileID: 7737665312825882991}
-  - component: {fileID: 8053758009581056674}
-  - component: {fileID: 6646859734337142947}
   m_Layer: 7
   m_Name: ClimbingRopeHook
   m_TagString: Untagged
@@ -161,34 +159,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfbfa2162bb8f0e4c8f7f81f90d1aa27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rope: {fileID: 0}
---- !u!114 &8053758009581056674
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6475831244566101888}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6757b231cedd544c583ef8aeaf773b2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thickness: 0
-  material: {fileID: 0}
-  filter: 1
-  m_SourceCollider: {fileID: 2926589214061704624}
-  m_DistanceField: {fileID: 0}
---- !u!114 &6646859734337142947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6475831244566101888}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62359d80fdc0e4315ab6331b78ec5b90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  kinematicForParticles: 0
