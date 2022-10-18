@@ -1,15 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Obi;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Hook : MonoBehaviour
 {
     private Rigidbody rb;
-    private bool targetHit;
+    private bool targetHit = false;
     private Quaternion desiredRotation;
-    private Vector3 desiredScale;
-
 
     private void Awake()
     {
@@ -18,16 +18,22 @@ public class Hook : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        if (targetHit)
-            return;
-        else
-            targetHit = true;
-
-        // make sure projectile stick to surface
-        rb.isKinematic = true;
+        if (targetHit) return;
         
-        //make sure projectile moves with target
+        targetHit = true;
+
+        rb.isKinematic = true;
 
         transform.SetParent(other.transform);
+    }
+
+    public bool GetTargetHit()
+    {
+        return targetHit;
+    }
+
+    public float GetMoveSpeed()
+    {
+        return rb.velocity.magnitude;
     }
 }
