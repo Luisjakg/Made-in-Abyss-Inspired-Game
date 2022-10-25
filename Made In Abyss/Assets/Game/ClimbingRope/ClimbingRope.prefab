@@ -98,7 +98,7 @@ MonoBehaviour:
   _maxCompression: 0
   _bendConstraintsEnabled: 1
   _bendCompliance: 0
-  _maxBending: 0.2
+  _maxBending: 0.1
   _plasticYield: 0
   _plasticCreep: 0
 --- !u!23 &979318963526315308

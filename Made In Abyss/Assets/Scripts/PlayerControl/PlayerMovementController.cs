@@ -218,12 +218,13 @@ namespace MIA.PlayerControl
             // We check the current speed to avoid overlap with crouch
             if (!shouldSlide) return;
             if (isCrouching || !isGrounded) return;
-            if (!isSliding && isSprinting && currentSpeedMagnitude > 0.5f) StartSlide();
+            if (!isSliding && isSprinting && currentSpeedMagnitude > 3f) StartSlide();
             else StopSlideWithCrouch();
         }
 
         private void StartSlide()
         {
+            Debug.Log("Sliding");
             isSliding = true;
 
             //If the user is in the air then we dont add downwards force in order to avoid weird movement
@@ -267,7 +268,6 @@ namespace MIA.PlayerControl
 
         private void StopCrouch()
         {
-            Debug.Log("Stopping Crouch");
             if (Physics.Raycast(transform.position, Vector3.up, 1.2f))
             {
                 isStuck = true;
