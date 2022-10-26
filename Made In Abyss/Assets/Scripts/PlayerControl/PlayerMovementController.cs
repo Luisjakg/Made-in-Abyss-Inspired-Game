@@ -263,7 +263,6 @@ namespace MIA.PlayerControl
 
         private void StartSlide()
         {
-            Debug.Log("Sliding");
             isSliding = true;
 
             //If the user is in the air then we dont add downwards force in order to avoid weird movement
@@ -414,7 +413,7 @@ namespace MIA.PlayerControl
         private void SpeedControl()
         {
             // limiting speed on slope
-            if (OnSlope() && !exitingSlope)
+            if (OnSlope() && !exitingSlope && isGrounded)
             {
                 if (currentSpeedMagnitude > currentMoveSpeed)
                     rb.velocity = rb.velocity.normalized * currentMoveSpeed;
@@ -555,7 +554,6 @@ namespace MIA.PlayerControl
         
         private void TakeFallDamage()
         {
-            Debug.Log(maxYVelocity);
             if (maxYVelocity <= massiveFallDamageThreshold)
                 playerAudioSource.PlayOneShot(massiveFallDamageSound);
             else
