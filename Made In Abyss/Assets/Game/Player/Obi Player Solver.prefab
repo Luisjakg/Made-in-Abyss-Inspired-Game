@@ -55,7 +55,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2773459945080249274}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -237,13 +237,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2773459945743437658}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.03, y: 22.019001, z: 13.41}
+  m_LocalPosition: {x: 1.03, y: 90.21, z: 13.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2773459945055475954}
   - {fileID: 2773459946359388683}
   - {fileID: 2773459945216686126}
+  - {fileID: 434244304109317437}
   m_Father: {fileID: 2773459945080249276}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -265,6 +266,7 @@ MonoBehaviour:
   canCrouch: 1
   canUseHeadBob: 1
   useFootsteps: 1
+  playerAudioSource: {fileID: 2773459945743437649}
   isCrouching: 0
   isSliding: 0
   isJumping: 0
@@ -284,6 +286,12 @@ MonoBehaviour:
   jumpForce: 10
   jumpCooldown: 0.25
   airMultiplier: 0.4
+  maxFallDamage: 999999
+  fallDamageSpeedThreshold: -15
+  fallDamageSound: {fileID: 8300000, guid: 57a3b8fda9dae9849b21c20ac6056a98, type: 3}
+  massiveFallDamageSound: {fileID: 8300000, guid: b357004807b86444a891fd19ddd82719,
+    type: 3}
+  massiveFallDamageThreshold: -30
   crouchYScale: 0.3
   slideForce: 1
   slideYScale: 0.3
@@ -294,6 +302,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   isGrounded: 0
+  stepRayUpper: {fileID: 6741857521649290371}
+  stepRayLower: {fileID: 8005774119087776676}
+  stepHeight: 0.3
+  stepSmooth: 0.1
   maxSlopeAngle: 50
   slideSpeedUpSlopeAngle: 20
   walkBobSpeed: 14
@@ -305,7 +317,6 @@ MonoBehaviour:
   baseStepSpeed: 0.45
   crouchStepMultiplier: 1.6
   sprintStepMultiplier: 0.8
-  footstepAudioSource: {fileID: 2773459945743437649}
   grassClips: []
   stoneClips:
   - {fileID: 8300000, guid: 2ca3af396b8d9eb449309c073748336c, type: 3}
@@ -334,9 +345,9 @@ MonoBehaviour:
     m_Bits: 8
   canThrow: 1
   throwForce: 20
-  throwUpwardsForce: 0
+  throwUpwardsForce: 0.5
   throwKey: 114
-  throwCooldown: 0.3
+  throwCooldown: 0.5
 --- !u!54 &2773459945743437660
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -576,3 +587,98 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2868400241531008971
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6741857521649290371}
+  m_Layer: 0
+  m_Name: stepRayUpper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6741857521649290371
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2868400241531008971}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.942, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 434244304109317437}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6132785157526286426
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 434244304109317437}
+  m_Layer: 0
+  m_Name: Step Parameters
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &434244304109317437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6132785157526286426}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6741857521649290371}
+  - {fileID: 8005774119087776676}
+  m_Father: {fileID: 2773459945743437661}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8045435803330286027
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8005774119087776676}
+  m_Layer: 0
+  m_Name: stepRayLower
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8005774119087776676
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8045435803330286027}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.94199944, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 434244304109317437}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Obi;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using Random = UnityEngine.Random;
 
 namespace MIA.PlayerControl
@@ -16,12 +17,14 @@ namespace MIA.PlayerControl
 
         [Header("Functional Options")] [SerializeField]
         private bool canSprint = true;
-
         [SerializeField] private bool canJump = true;
         [SerializeField] private bool canSlide = true;
         [SerializeField] private bool canCrouch = true;
         [SerializeField] private bool canUseHeadBob = true;
         [SerializeField] private bool useFootsteps = true;
+        
+        [Header("Audio")]
+        [SerializeField] private AudioSource playerAudioSource = default;
 
         [Header("States")] [SerializeField] private bool isCrouching;
         [SerializeField] private bool isSliding;
@@ -47,12 +50,19 @@ namespace MIA.PlayerControl
         private float lastDesiredMoveSpeed;
         private Vector3 moveDirection;
 
-        [Header("Jumping Parameters")] [SerializeField]
-        private float jumpForce = 8.0f;
-
+        [Header("Jumping Parameters")] 
+        [SerializeField] private float jumpForce = 8.0f;
         [SerializeField] private float jumpCooldown = 0f;
         [SerializeField] private float airMultiplier = 0.5f;
         private bool readyToJump;
+        
+        [Header("Fall Damage Parameters")]
+        [SerializeField] float maxFallDamage = 999999f;
+        [SerializeField] private float fallDamageSpeedThreshold = -10f;
+        [SerializeField] private AudioClip fallDamageSound = default;
+        [SerializeField] private AudioClip massiveFallDamageSound = default;
+        [SerializeField] private float massiveFallDamageThreshold; 
+        private float maxYVelocity;
 
         [Header("Crouch Parameters")] [SerializeField]
         private float crouchYScale = .4f;
@@ -71,9 +81,14 @@ namespace MIA.PlayerControl
 
         [Header("GroundCheck")] [SerializeField]
         private LayerMask whatIsGround;
-
         [SerializeField] private bool isGrounded;
 
+        [Header("Step Parameters")] 
+        [SerializeField] private Transform stepRayUpper;
+        [SerializeField] private Transform stepRayLower;
+        [SerializeField] private float stepHeight = 0.3f;
+        [SerializeField] private float stepSmooth = 0.1f;
+        
         [Header("Slope Handling")] [SerializeField, Range(0f, 90f)]
         private float maxSlopeAngle = 40f;
 
@@ -98,7 +113,6 @@ namespace MIA.PlayerControl
 
         [SerializeField] private float crouchStepMultiplier = 1.5f;
         [SerializeField] private float sprintStepMultiplier = 0.6f;
-        [SerializeField] private AudioSource footstepAudioSource = default;
         [SerializeField] private AudioClip[] grassClips = default;
         [SerializeField] private AudioClip[] stoneClips = default;
         [SerializeField] private AudioClip[] woodClips = default;
@@ -120,10 +134,14 @@ namespace MIA.PlayerControl
 
         private void Awake()
         {
+            maxYVelocity = 0;
             rb = GetComponent<Rigidbody>();
             rb.freezeRotation = true;
             readyToJump = true;
             startYScale = transform.localScale.y;
+            
+            /*stepRayUpper.transform.position = new Vector3(stepRayUpper.transform.position.x,
+                stepRayUpper.transform.position.y + stepHeight, stepRayUpper.transform.position.z);*/
         }
 
         private void Update()
@@ -133,7 +151,7 @@ namespace MIA.PlayerControl
             DesiredMoveSpeed();
 
             //ground check
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround);
+            GroundCheck();
 
             if (CanMove) HandleMovementInput();
 
@@ -151,8 +169,9 @@ namespace MIA.PlayerControl
 
             if (useFootsteps) HandleFootsteps();
 
+            //StepClimb(); TODO this part is extremely buggy for the moment
+            
             //handle drag
-
             if (isGrounded)
                 rb.drag = groundDrag;
             else
@@ -166,6 +185,26 @@ namespace MIA.PlayerControl
                 SlidingMovement();
 
             ApplyFinalMovements();
+        }
+
+        private void GroundCheck()
+        {
+            if (Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround))
+            {
+                isGrounded = true;
+                if (maxYVelocity <= fallDamageSpeedThreshold)
+                {
+                    TakeFallDamage();
+                    maxYVelocity = 0;
+                }
+            }
+            else
+            {
+                isGrounded = false;
+                if (rb.velocity.y < maxYVelocity)
+                    maxYVelocity = rb.velocity.y;
+            }
+            
         }
 
         private void HandleMovementInput()
@@ -309,19 +348,19 @@ namespace MIA.PlayerControl
                     switch (hit.collider.tag)
                     {
                         case "Footsteps/GRASS":
-                            footstepAudioSource.PlayOneShot(
+                            playerAudioSource.PlayOneShot(
                                 grassClips[Random.Range(0, woodClips.Length - 1)]);
                             break;
                         case "Footsteps/STONE":
-                            footstepAudioSource.PlayOneShot(
+                            playerAudioSource.PlayOneShot(
                                 stoneClips[Random.Range(0, stoneClips.Length - 1)]);
                             break;
                         case "Footsteps/WOOD":
-                            footstepAudioSource.PlayOneShot(
+                            playerAudioSource.PlayOneShot(
                                 woodClips[Random.Range(0, woodClips.Length - 1)]);
                             break;
                         default:
-                            footstepAudioSource.PlayOneShot(
+                            playerAudioSource.PlayOneShot(
                                 stoneClips[Random.Range(0, stoneClips.Length - 1)]);
                             break;
                     }
@@ -407,6 +446,33 @@ namespace MIA.PlayerControl
 
             lastDesiredMoveSpeed = desiredMoveSpeed;
         }
+        
+        private void StepClimb()
+        {
+            if (moveDirection == Vector3.zero) return;
+
+            Vector3 stepDirection;
+
+            if (OnSlope() && !exitingSlope) 
+                stepDirection = GetSlopeMoveDirection(moveDirection);
+            else
+                stepDirection = moveDirection;
+
+                //climb at an angle
+
+            // if the bottom raycast collides but the top doesn't then bounce us up over the step
+            Debug.DrawRay(stepRayLower.position, transform.TransformDirection(stepDirection), Color.green);
+            Debug.DrawRay(stepRayUpper.position, transform.TransformDirection(stepDirection), Color.red);
+            if (Physics.Raycast(stepRayLower.position, transform.TransformDirection(stepDirection), 1f))
+            {
+                Debug.Log("Lower Collision");
+                if (!Physics.Raycast(stepRayUpper.position, transform.TransformDirection(stepDirection), 1f))
+                {
+                    Debug.Log("No upper collision");
+                    rb.position -= new Vector3(0f, -stepSmooth, 0f);
+                }
+            }
+        }
 
         private IEnumerator SmoothlyLerpMoveSpeed(float duration)
         {
@@ -485,6 +551,18 @@ namespace MIA.PlayerControl
         {
             float currentHeight = (isCrouching ? crouchYScale + 1 : isSliding ? slideYScale + 1 : standingHeight);
             return currentHeight;
+        }
+        
+        private void TakeFallDamage()
+        {
+            Debug.Log(maxYVelocity);
+            if (maxYVelocity <= massiveFallDamageThreshold)
+                playerAudioSource.PlayOneShot(massiveFallDamageSound);
+            else
+                playerAudioSource.PlayOneShot(fallDamageSound);
+                
+
+            //TODO call to the health script to reduce health or something -\_(;-;)_/-
         }
 
         public bool GetIsGrounded()

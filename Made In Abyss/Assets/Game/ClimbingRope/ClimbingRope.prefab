@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   decimation: 0
-  smoothing: 0
+  smoothing: 1
   twist: 0
 --- !u!114 &979318963526315311
 MonoBehaviour:
@@ -448,7 +448,7 @@ MonoBehaviour:
   canChangeSize: 1
   retractRope: 323
   extendRope: 324
-  airExtendMultiplier: 0.8
+  airExtendMultiplier: 0.9
   minimumRopeSize: 0.7
   maxRopeSize: 35
   retractSpeed: 2
