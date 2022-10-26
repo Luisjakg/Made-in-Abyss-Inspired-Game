@@ -337,6 +337,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 0}
+  playerMovementController: {fileID: 2773459945743437662}
   attackPoint: {fileID: 0}
   climbingRopePrefab: {fileID: 3706682911863272934, guid: faaad9432d64b414c811bbc824f8b0d8,
     type: 3}

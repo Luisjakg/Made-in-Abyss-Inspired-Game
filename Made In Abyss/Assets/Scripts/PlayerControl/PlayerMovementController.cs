@@ -569,5 +569,10 @@ namespace MIA.PlayerControl
         {
             return isGrounded;
         }
+
+        public Vector3 getVelocity()
+        {
+            return rb.velocity;
+        }
     }
 }

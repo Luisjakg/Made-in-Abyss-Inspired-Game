@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using MIA.ClimbingRope;
+using MIA.PlayerControl;
 using UnityEngine;
 
 namespace MIA.ClimbingRope
@@ -12,7 +13,7 @@ namespace MIA.ClimbingRope
 
         [Header("References")] [SerializeField]
         private Transform playerCamera;
-
+        [SerializeField]private PlayerMovementController playerMovementController;
         [SerializeField] private Transform attackPoint;
         [SerializeField] private GameObject climbingRopePrefab;
         [SerializeField] private LayerMask playerLayer;
@@ -60,14 +61,13 @@ namespace MIA.ClimbingRope
             // Calculate direction
             if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hit,
                 500f, playerLayer))
-            {
-                Debug.Log(hit.point);
                 forceDirection = (hit.point - attackPoint.position).normalized;
-            }
             else forceDirection = playerCamera.transform.forward;
 
             //Add force to projectile
             Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardsForce;
+            //Add player current velocity to projectile
+            forceToAdd += playerMovementController.getVelocity();
             hookRb.AddForce(forceToAdd, ForceMode.Impulse);
 
             Invoke(nameof(ResetThrow), throwCooldown);
