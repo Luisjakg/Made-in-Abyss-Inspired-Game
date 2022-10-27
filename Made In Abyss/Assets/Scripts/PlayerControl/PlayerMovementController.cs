@@ -213,8 +213,9 @@ namespace MIA.PlayerControl
 
             verticalInput = Input.GetAxisRaw("Vertical");
 
+            //I have no idea why but it wont work properly if it isn't done this way
             if (shouldSlide)
-                moveDirection = playerCam.transform.forward;
+                moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
             else if (!isSliding)
                 moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
         }

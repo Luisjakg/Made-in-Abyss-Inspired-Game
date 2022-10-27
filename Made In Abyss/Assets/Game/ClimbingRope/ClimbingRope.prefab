@@ -51,41 +51,146 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61104f33a3f344db9b7e0d0cda41a9fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  solverIndices: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f000000200000002100000022000000230000002400000025000000260000002700000028000000290000002a0000002b0000002c0000002d0000002e0000002f000000300000003100000032000000330000003400000035000000360000003700000038000000390000003a0000003b0000003c0000003d0000003e0000003f000000400000004100000042000000430000004400000045000000460000004700000048000000490000004a0000004b0000004c0000004d0000004e0000004f000000500000005100000052000000530000005400000055000000560000005700000058000000590000005a0000005b0000005c0000005d0000005e0000005f000000600000006100000062000000630000006400000065000000660000006700000068000000690000006a0000006b0000006c0000006d0000006e0000006f000000700000007100000072000000730000007400000075000000760000007700000078000000790000007a0000007b0000007c0000007d0000007e0000007f000000800000008100000082000000830000008400000085000000860000008700000088000000890000008a0000008b0000008c0000008d0000008e0000008f000000900000009100000092000000930000009400000095000000960000009700000098000000990000009a0000009b0000009c0000009d0000009e0000009f000000a0000000a1000000a2000000a3000000a4000000a5000000a6000000a7000000a8000000a9000000aa000000ab000000ac000000ad000000ae000000af000000b0000000b1000000b2000000b3000000b4000000b5000000b6000000b7000000b8000000b9000000ba000000bb000000bc000000bd000000be000000bf000000c0000000c1000000c2000000c3000000c4000000c5000000c6000000c7000000c8000000c9000000ca000000cb000000cc000000cd000000ce000000
+  solverIndices: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f000000200000002100000022000000230000002400000025000000260000002700000028000000290000002a0000002b0000002c0000002d0000002e0000002f000000300000003100000032000000330000003400000035000000360000003700000038000000390000003a0000003b0000003c0000003d0000003e0000003f000000400000004100000042000000430000004400000045000000460000004700000048000000490000004a0000004b0000004c0000004d0000004e0000004f000000500000005100000052000000530000005400000055000000560000005700000058000000590000005a0000005b0000005c0000005d0000005e0000005f000000600000006100000062000000630000006400000065000000660000006700000068000000690000006a0000006b0000006c0000006d0000006e0000006f000000700000007100000072000000730000007400000075000000760000007700000078000000790000007a0000007b0000007c0000007d0000007e0000007f000000
   m_CollisionMaterial: {fileID: 11400000, guid: 3e388b68849750c49a5ea95ba3e1850c,
     type: 2}
   m_SurfaceCollisions: 1
   m_SelfCollisions: 1
-  restLength_: 2
+  restLength_: 5.3430486
   elements:
   - particle1: 0
     particle2: 1
-    restLength: 0.33243138
+    restLength: 0.1912942
     constraintForce: 0
     tearResistance: 1
   - particle1: 1
     particle2: 2
-    restLength: 0.33384106
+    restLength: 0.1984415
     constraintForce: 0
     tearResistance: 1
   - particle1: 2
     particle2: 3
-    restLength: 0.33372754
+    restLength: 0.19926786
     constraintForce: 0
     tearResistance: 1
   - particle1: 3
     particle2: 4
-    restLength: 0.33372742
+    restLength: 0.2010746
     constraintForce: 0
     tearResistance: 1
   - particle1: 4
     particle2: 5
-    restLength: 0.333841
+    restLength: 0.19630146
     constraintForce: 0
     tearResistance: 1
   - particle1: 5
     particle2: 6
-    restLength: 0.3324316
+    restLength: 0.19763184
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 6
+    particle2: 7
+    restLength: 0.20122385
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 7
+    particle2: 8
+    restLength: 0.19535685
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 8
+    particle2: 9
+    restLength: 0.19962478
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 9
+    particle2: 10
+    restLength: 0.19718385
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 10
+    particle2: 11
+    restLength: 0.1987977
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 11
+    particle2: 12
+    restLength: 0.1978414
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 12
+    particle2: 13
+    restLength: 0.19848418
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 13
+    particle2: 14
+    restLength: 0.19800043
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 14
+    particle2: 15
+    restLength: 0.1984837
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 15
+    particle2: 16
+    restLength: 0.19784188
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 16
+    particle2: 17
+    restLength: 0.19879723
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 17
+    particle2: 18
+    restLength: 0.19718385
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 18
+    particle2: 19
+    restLength: 0.19962549
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 19
+    particle2: 20
+    restLength: 0.19535685
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 20
+    particle2: 21
+    restLength: 0.20122302
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 21
+    particle2: 22
+    restLength: 0.1976316
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 22
+    particle2: 23
+    restLength: 0.19630206
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 23
+    particle2: 24
+    restLength: 0.20107436
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 24
+    particle2: 25
+    restLength: 0.19926852
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 25
+    particle2: 26
+    restLength: 0.19844097
+    constraintForce: 0
+    tearResistance: 1
+  - particle1: 26
+    particle2: 27
+    restLength: 0.19129455
     constraintForce: 0
     tearResistance: 1
   m_RopeBlueprint: {fileID: 11400000, guid: 586141276a7a66a4a8ef6752b10d2cba, type: 2}
@@ -196,8 +301,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Actor: {fileID: 979318963526315315}
-  m_Target: {fileID: 673198422200953876}
-  m_ParticleGroup: {fileID: 2871180496581025245, guid: 586141276a7a66a4a8ef6752b10d2cba,
+  m_Target: {fileID: 0}
+  m_ParticleGroup: {fileID: -8612618607123933567, guid: 586141276a7a66a4a8ef6752b10d2cba,
     type: 2}
   m_AttachmentType: 0
   m_ConstrainOrientation: 0
@@ -217,7 +322,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actor: {fileID: 979318963526315315}
   m_Target: {fileID: 0}
-  m_ParticleGroup: {fileID: -8612618607123933567, guid: 586141276a7a66a4a8ef6752b10d2cba,
+  m_ParticleGroup: {fileID: 2871180496581025245, guid: 586141276a7a66a4a8ef6752b10d2cba,
     type: 2}
   m_AttachmentType: 0
   m_ConstrainOrientation: 0
@@ -269,7 +374,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 979318963526315306}
-  - {fileID: 673198422200953876}
   m_Father: {fileID: 3009377590440887762}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -455,131 +559,3 @@ MonoBehaviour:
   extendSpeed: 3
   rope: {fileID: 979318963526315307}
   obiSolver: {fileID: 979318964106906743}
-  hook: {fileID: 6073661945358521309}
---- !u!1001 &979318964341173341
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 979318964106906742}
-    m_Modifications:
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.9619999
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1350884882347582348, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_UseGravity
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6475831244566101888, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: m_Name
-      value: ClimbingRopeHook
-      objectReference: {fileID: 0}
-    - target: {fileID: 7737665312825882991, guid: 259f6572a3b15df42998e0de2a1a16fe,
-        type: 3}
-      propertyPath: rope
-      value: 
-      objectReference: {fileID: 979318963526315307}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 259f6572a3b15df42998e0de2a1a16fe, type: 3}
---- !u!4 &673198422200953876 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 342435256764186697, guid: 259f6572a3b15df42998e0de2a1a16fe,
-    type: 3}
-  m_PrefabInstance: {fileID: 979318964341173341}
-  m_PrefabAsset: {fileID: 0}
---- !u!135 &2669060124097173997 stripped
-SphereCollider:
-  m_CorrespondingSourceObject: {fileID: 2926589214061704624, guid: 259f6572a3b15df42998e0de2a1a16fe,
-    type: 3}
-  m_PrefabInstance: {fileID: 979318964341173341}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6073661945358521309 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6475831244566101888, guid: 259f6572a3b15df42998e0de2a1a16fe,
-    type: 3}
-  m_PrefabInstance: {fileID: 979318964341173341}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &979318964969540309
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6073661945358521309}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6757b231cedd544c583ef8aeaf773b2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thickness: 0
-  material: {fileID: 0}
-  filter: 1
-  m_SourceCollider: {fileID: 2669060124097173997}
-  m_DistanceField: {fileID: 0}
---- !u!114 &979318964969540310
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6073661945358521309}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62359d80fdc0e4315ab6331b78ec5b90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  kinematicForParticles: 0

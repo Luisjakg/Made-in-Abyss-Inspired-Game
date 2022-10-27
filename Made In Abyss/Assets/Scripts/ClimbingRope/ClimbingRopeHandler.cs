@@ -30,24 +30,27 @@ namespace MIA.ClimbingRope
         [Header("References")]
         [SerializeField] private GameObject rope;
         [SerializeField] private ObiSolver obiSolver;
-        [SerializeField] private GameObject hook;
+        private GameObject hook;
         private ObiRopeCursor ropeCursor;
         private PlayerMovementController playerMovementController;
         private GameObject player;
         private Vector3 startGravityValue;
         private ObiParticleAttachment[] particleAttachments; //0 is for hook & 1 is for player
-        
+        private ClimbingRopeShooter climbingRopeShooter;
+
         private void Awake()
         {
             particleAttachments = rope.GetComponents<ObiParticleAttachment>();
             ropeCursor = rope.GetComponent<ObiRopeCursor>();
             player = GameObject.FindGameObjectWithTag("Player");
             playerMovementController = player.GetComponent<PlayerMovementController>();
+            climbingRopeShooter = player.GetComponent<ClimbingRopeShooter>();
         }
         
         void Start()
         {
-            AttachRopeToPlayer();
+            hook = climbingRopeShooter.GetHook();
+            AttachRopeEndpoints();
         }
         
         void Update()
@@ -64,8 +67,9 @@ namespace MIA.ClimbingRope
             if (canChangeSize) HandleRopeLength();
         }
         
-        private void AttachRopeToPlayer()
+        private void AttachRopeEndpoints()
         {
+            particleAttachments[0].target = hook.transform;
             particleAttachments[1].target = player.transform;
         }
         
@@ -98,11 +102,6 @@ namespace MIA.ClimbingRope
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
             else
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Static;
-        }
-        
-        public GameObject GetHook()
-        {
-            return hook; 
         }
     }
 }
