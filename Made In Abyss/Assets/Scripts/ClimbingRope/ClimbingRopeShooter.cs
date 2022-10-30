@@ -12,6 +12,9 @@ namespace MIA.ClimbingRope
     {
         private bool ShouldReadyThrow => Input.GetKeyDown(throwKey);
         private bool shouldThrow => Input.GetKeyUp(throwKey);
+
+        [Header("Functional Options")] 
+        [SerializeField] private bool canThrow = true;
         
         [Header("Controls")]
         [SerializeField] private KeyCode throwKey = KeyCode.R;
@@ -29,8 +32,7 @@ namespace MIA.ClimbingRope
         private bool hookReady;
         private GameObject core;
 
-        [Header("Throwing")] 
-        [SerializeField] private bool canThrow = true;
+        [Header("Throwing")]
         [SerializeField] private float throwForce;
         [SerializeField] private float throwUpwardsForce;
         [SerializeField] private float throwCooldown;

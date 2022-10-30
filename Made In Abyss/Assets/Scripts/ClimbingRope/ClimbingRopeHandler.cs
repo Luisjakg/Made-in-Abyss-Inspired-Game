@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using MIA.PlayerControl;
 using Obi;
 using UnityEngine;
@@ -38,6 +35,7 @@ namespace MIA.ClimbingRope
         private GameObject player;
         private Vector3 startGravityValue;
         private ObiParticleAttachment[] particleAttachments; //0 is for hook & 1 is for player
+        private float strain;
         
         private void Awake()
         {
@@ -55,8 +53,10 @@ namespace MIA.ClimbingRope
         void Update()
         {
             if (!rope.GetComponent<ObiRope>().isLoaded) return;
+            
+            CalculateStrain();
 
-            desiredRopeSize = Mathf.Clamp(Vector3.Distance(player.transform.position, hook.transform.position), minimumRopeSize, maxRopeSize);
+            desiredRopeSize = Mathf.Clamp(Vector3.Distance(player.transform.position, hook.transform.position) + 1, minimumRopeSize, maxRopeSize);
             Debug.Log(desiredRopeSize);
             currentRopeSize = rope.GetComponent<ObiRope>().restLength;
 
@@ -105,6 +105,12 @@ namespace MIA.ClimbingRope
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
             else
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Static;
+        }
+
+        private void CalculateStrain()
+        {
+            strain = rope.GetComponent<ObiRope>().CalculateLength() / rope.GetComponent<ObiRope>().restLength;
+            Debug.Log(strain);
         }
 
         public void Visible(bool condition)
