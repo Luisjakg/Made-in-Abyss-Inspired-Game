@@ -56,7 +56,7 @@ namespace MIA.ClimbingRope
         {
             if (!rope.GetComponent<ObiRope>().isLoaded) return;
 
-            desiredRopeSize = Vector3.Distance(player.transform.position, hook.transform.position);
+            desiredRopeSize = Mathf.Clamp(Vector3.Distance(player.transform.position, hook.transform.position), minimumRopeSize, maxRopeSize);
             Debug.Log(desiredRopeSize);
             currentRopeSize = rope.GetComponent<ObiRope>().restLength;
 
@@ -76,9 +76,10 @@ namespace MIA.ClimbingRope
         private void HandleRopeLength()
         {
             if (shouldExtend && shouldRetract) return;
-            if (shouldRetract && !(currentRopeSize <= minimumRopeSize))
+            if (shouldRetract && currentRopeSize >= minimumRopeSize)
                 RetractRope(retractSpeed);
-            else if (shouldExtend) ExtendRope(extendSpeed);
+            else if (shouldExtend && currentRopeSize < maxRopeSize) 
+                ExtendRope(extendSpeed);
         }
         
         private void RetractRope(float velocity)
@@ -93,11 +94,13 @@ namespace MIA.ClimbingRope
 
         private void HandleParticleAttachments()
         {
+            //Hook
             if (currentRopeSize >= maxRopeSize && !hook.GetComponent<Hook>().GetIsTargetHit())
                 particleAttachments[0].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
             else
                 particleAttachments[0].attachmentType = ObiParticleAttachment.AttachmentType.Static;
             
+            //Player
             if (hook.GetComponent<Hook>().GetIsTargetHit())
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
             else

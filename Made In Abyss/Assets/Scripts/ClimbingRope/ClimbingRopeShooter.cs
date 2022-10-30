@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MIA.ClimbingRope;
 using MIA.PlayerControl;
+using Obi;
 using UnityEngine;
 
 namespace MIA.ClimbingRope
@@ -11,7 +12,10 @@ namespace MIA.ClimbingRope
     {
         private bool ShouldReadyThrow => Input.GetKeyDown(throwKey);
         private bool shouldThrow => Input.GetKeyUp(throwKey);
-
+        
+        [Header("Controls")]
+        [SerializeField] private KeyCode throwKey = KeyCode.R;
+        
         [Header("References")] 
         [SerializeField] private Transform playerCamera;
         [SerializeField] private Transform hookSpawnPosition;
@@ -23,20 +27,23 @@ namespace MIA.ClimbingRope
         private GameObject hook;
         private ClimbingRopeHandler climbingRopeHandler;
         private bool hookReady;
+        private GameObject core;
 
         [Header("Throwing")] 
         [SerializeField] private bool canThrow = true;
         [SerializeField] private float throwForce;
         [SerializeField] private float throwUpwardsForce;
-        [SerializeField] private KeyCode throwKey = KeyCode.R;
-        private bool readyToThrow;
-
-        [Header("Settings")] 
         [SerializeField] private float throwCooldown;
-
+        private bool readyToThrow;
+        
         private void Awake()
         {
             readyToThrow = true;
+        }
+
+        private void Start()
+        {
+            core = GameObject.FindGameObjectWithTag("Core");
         }
 
         private void Update()
@@ -81,6 +88,8 @@ namespace MIA.ClimbingRope
         private void ThrowHook()
         {
             climbingRopeHandler.Visible(true);
+            hook.transform.parent = core.transform;
+            
             Rigidbody hookRb = hook.GetComponent<Rigidbody>();
             Vector3 forceDirection;
             
