@@ -9,10 +9,12 @@ namespace MIA.ClimbingRope
 {
     public class ClimbingRopeShooter : MonoBehaviour
     {
-        private bool shouldThrow => Input.GetKeyDown(throwKey);
+        private bool ShouldReadyThrow => Input.GetKeyDown(throwKey);
+        private bool shouldThrow => Input.GetKeyUp(throwKey);
 
-        [Header("References")] [SerializeField]
-        private Transform playerCamera;
+        [Header("References")] 
+        [SerializeField] private Transform playerCamera;
+        [SerializeField] private Transform hookSpawnPosition;
         [SerializeField]private PlayerMovementController playerMovementController;
         [SerializeField] private Transform attackPoint;
         [SerializeField] private GameObject climbingRopePrefab;
@@ -20,14 +22,17 @@ namespace MIA.ClimbingRope
         private GameObject climbingRope;
         private GameObject hook;
         private ClimbingRopeHandler climbingRopeHandler;
+        private bool hookReady;
 
-        [Header("Throwing")] [SerializeField] private bool canThrow = true;
+        [Header("Throwing")] 
+        [SerializeField] private bool canThrow = true;
         [SerializeField] private float throwForce;
         [SerializeField] private float throwUpwardsForce;
         [SerializeField] private KeyCode throwKey = KeyCode.R;
         private bool readyToThrow;
 
-        [Header("Settings")] [SerializeField] private float throwCooldown;
+        [Header("Settings")] 
+        [SerializeField] private float throwCooldown;
 
         private void Awake()
         {
@@ -41,29 +46,52 @@ namespace MIA.ClimbingRope
 
         private void HandleThrow()
         {
-            if (!shouldThrow) return;
+            
+            if (!readyToThrow) return;
+
+            if (ShouldReadyThrow) ReadyThrow();
+
+            if (shouldThrow && hookReady) ThrowHook();
+        }
+
+        private void ReadyThrow()
+        {
             if (!readyToThrow) return;
             if (climbingRope != null)
             {
                 Destroy(climbingRope);
                 Destroy(hook);
+                hookReady = false;
                 return;
             }
 
             climbingRope = Instantiate(climbingRopePrefab, attackPoint.position, Quaternion.identity);
             climbingRopeHandler = climbingRope.GetComponent<ClimbingRopeHandler>();
-            Vector3 forceDirection;
+            climbingRopeHandler.Visible(false);
 
             // get hook of rope
             hook = climbingRopeHandler.GetHook();
-            Rigidbody hookRb = hook.GetComponent<Rigidbody>();
 
+            hook.transform.parent = hookSpawnPosition;
+            hook.transform.position = hookSpawnPosition.position;
+
+            hookReady = true;
+        }
+
+        private void ThrowHook()
+        {
+            climbingRopeHandler.Visible(true);
+            Rigidbody hookRb = hook.GetComponent<Rigidbody>();
+            Vector3 forceDirection;
+            
             // Calculate direction
             if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hit,
                 500f, playerLayer))
                 forceDirection = (hit.point - attackPoint.position).normalized;
             else forceDirection = playerCamera.transform.forward;
 
+
+            hookRb.isKinematic = false;
             //Add force to projectile
             Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardsForce;
             //Add player current velocity to projectile

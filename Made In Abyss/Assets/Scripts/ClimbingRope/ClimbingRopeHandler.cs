@@ -22,15 +22,17 @@ namespace MIA.ClimbingRope
         [Header("Size Change Control")]
         [SerializeField] private float airExtendMultiplier = .8f;
         [SerializeField] private float minimumRopeSize = .4f;
-        [SerializeField] private float maxRopeSize = 2f;
+        [SerializeField] private float maxRopeSize = 30f;
         [SerializeField] private float retractSpeed;
         [SerializeField] private float extendSpeed;
         private float currentRopeSize;
+        private float desiredRopeSize;
         
         [Header("References")]
         [SerializeField] private GameObject rope;
         [SerializeField] private ObiSolver obiSolver;
         [SerializeField] private GameObject hook;
+        [SerializeField] private MeshRenderer ropeMeshRenderer;
         private ObiRopeCursor ropeCursor;
         private PlayerMovementController playerMovementController;
         private GameObject player;
@@ -54,10 +56,12 @@ namespace MIA.ClimbingRope
         {
             if (!rope.GetComponent<ObiRope>().isLoaded) return;
 
+            desiredRopeSize = Vector3.Distance(player.transform.position, hook.transform.position);
+            Debug.Log(desiredRopeSize);
             currentRopeSize = rope.GetComponent<ObiRope>().restLength;
-            
-            if (!hook.GetComponent<Hook>().GetIsTargetHit())
-                ExtendRope(hook.GetComponent<Hook>().GetMoveSpeed() * airExtendMultiplier);
+
+            if (!hook.GetComponent<Hook>().GetIsTargetHit() && currentRopeSize < maxRopeSize)
+                ropeCursor.ChangeLength(Mathf.Min(desiredRopeSize,maxRopeSize));
             
             HandleParticleAttachments();
             
@@ -98,6 +102,11 @@ namespace MIA.ClimbingRope
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Dynamic;
             else
                 particleAttachments[1].attachmentType = ObiParticleAttachment.AttachmentType.Static;
+        }
+
+        public void Visible(bool condition)
+        {
+            ropeMeshRenderer.enabled = condition;
         }
         
         public GameObject GetHook()
