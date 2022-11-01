@@ -189,8 +189,12 @@ namespace MIA.PlayerControl
 
         private void GroundCheck()
         {
-            if (Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround))
+            Vector3 cast = transform.position;
+            
+            //if (Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround)) (OLD RAYCAST)
+            if (Physics.SphereCast(cast, .4f, Vector3.down,out RaycastHit hit ,.65f, whatIsGround))
             {
+                isJumping = false;
                 isGrounded = true;
                 if (maxYVelocity <= fallDamageSpeedThreshold)
                 {
@@ -247,7 +251,6 @@ namespace MIA.PlayerControl
 
         private void ResetJump()
         {
-            isJumping = false;
             readyToJump = true;
             exitingSlope = false;
         }
@@ -376,7 +379,7 @@ namespace MIA.PlayerControl
             // on slope
             if (OnSlope() && !exitingSlope)
             {
-                rb.AddForce(GetSlopeMoveDirection(moveDirection) * currentMoveSpeed * 20f, ForceMode.Force);
+                rb.AddForce(GetSlopeMoveDirection(moveDirection) * (currentMoveSpeed * 20f), ForceMode.Force);
 
                 //We add force to avoid weird bouncing while going down slopes
                 if (rb.velocity.y > 0)
@@ -385,11 +388,11 @@ namespace MIA.PlayerControl
 
             //on ground
             else if (isGrounded)
-                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f), ForceMode.Force);
 
             // in air
             else if (!isGrounded)
-                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f * airMultiplier), ForceMode.Force);
         }
 
 
@@ -568,9 +571,17 @@ namespace MIA.PlayerControl
             return isGrounded;
         }
 
-        public Vector3 getVelocity()
+        public Vector3 GetVelocity()
         {
             return rb.velocity;
+        }
+
+        
+        //Ground check visualization
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position - new Vector3(0f, .65f, 0f), .4f);
         }
     }
 }

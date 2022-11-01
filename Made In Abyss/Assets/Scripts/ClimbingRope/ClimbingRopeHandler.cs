@@ -57,7 +57,6 @@ namespace MIA.ClimbingRope
             CalculateStrain();
 
             desiredRopeSize = Mathf.Clamp(Vector3.Distance(player.transform.position, hook.transform.position) + 1, minimumRopeSize, maxRopeSize);
-            Debug.Log(desiredRopeSize);
             currentRopeSize = rope.GetComponent<ObiRope>().restLength;
 
             if (!hook.GetComponent<Hook>().GetIsTargetHit() && currentRopeSize < maxRopeSize)
@@ -78,7 +77,7 @@ namespace MIA.ClimbingRope
             if (shouldExtend && shouldRetract) return;
             if (shouldRetract && currentRopeSize >= minimumRopeSize)
                 RetractRope(retractSpeed);
-            else if (shouldExtend && currentRopeSize < maxRopeSize) 
+            else if (shouldExtend && currentRopeSize < maxRopeSize)
                 ExtendRope(extendSpeed);
         }
         

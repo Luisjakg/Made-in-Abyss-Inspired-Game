@@ -106,7 +106,7 @@ namespace MIA.ClimbingRope
             //Add force to projectile
             Vector3 forceToAdd = forceDirection * throwForce + transform.up * throwUpwardsForce;
             //Add player current velocity to projectile
-            forceToAdd += playerMovementController.getVelocity();
+            forceToAdd += playerMovementController.GetVelocity();
             hookRb.AddForce(forceToAdd, ForceMode.Impulse);
 
             Invoke(nameof(ResetThrow), throwCooldown);
