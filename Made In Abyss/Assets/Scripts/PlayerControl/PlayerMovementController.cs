@@ -10,10 +10,11 @@ namespace MIA.PlayerControl
     public class PlayerMovementController : MonoBehaviour
     {
         public bool CanMove { get; private set; } = true;
+        private bool IsMovingForward => Input.GetKey(forwardKey) && !Input.GetKey(backKey);
         private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
         private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
         private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
-        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting;
+        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting && IsMovingForward;
 
         [Header("Functional Options")] [SerializeField]
         private bool canSprint = true;
@@ -31,10 +32,13 @@ namespace MIA.PlayerControl
         [SerializeField] private bool isJumping;
         [SerializeField] private bool isSprinting;
 
-        [Header("Controls")] [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
+        [Header("Controls")] 
+        [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
         [SerializeField] private KeyCode jumpKey = KeyCode.Space;
         [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
         [SerializeField] private KeyCode slideKey = KeyCode.C;
+        [SerializeField] private KeyCode forwardKey = KeyCode.W;
+        [SerializeField] private KeyCode backKey = KeyCode.S;
 
         [Header("Movement Parameters")] [SerializeField]
         private float walkSpeed = 3.0f;
@@ -218,7 +222,11 @@ namespace MIA.PlayerControl
             verticalInput = Input.GetAxisRaw("Vertical");
 
             if (shouldSlide)
-                moveDirection = playerCam.transform.forward;
+            {
+                var newDirection = playerCam.transform.forward;
+                newDirection = new Vector3(newDirection.x, 0f, newDirection.z);
+                moveDirection = newDirection;
+            }
             else if (!isSliding)
                 moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
         }
