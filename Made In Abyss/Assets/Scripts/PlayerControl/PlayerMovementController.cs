@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Obi;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 using Random = UnityEngine.Random;
@@ -125,17 +126,28 @@ namespace MIA.PlayerControl
         private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
             isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
-        [Header("Orientation")] [SerializeField]
-        private Transform orientation;
-
+        [Header("Orientation")] 
+        [SerializeField] private Transform orientation;
         [SerializeField] private Camera playerCam;
         [SerializeField] private Collider playerCollider;
         private Vector3 playerLookDirection;
         private float horizontalInput;
         private float verticalInput;
+        
+        [Header("State")]
+        [SerializeField] private PlayerState playerState = default;
 
+        public enum PlayerState
+        {
+            Walking,
+            Sprinting,
+            Crouching,
+            Sliding,
+            Idle
+        }
+        
         private Rigidbody rb;
-
+        
         private void Awake()
         {
             maxYVelocity = 0;
@@ -180,7 +192,8 @@ namespace MIA.PlayerControl
                 rb.drag = groundDrag;
             else
                 rb.drag = 0;
-
+            
+            HandleStates();
         }
 
         private void FixedUpdate()
@@ -583,13 +596,33 @@ namespace MIA.PlayerControl
         {
             return rb.velocity;
         }
-
         
+        
+        private void HandleStates()
+        {
+            if (isSliding)
+                playerState = PlayerState.Sliding;
+            else if (isCrouching)
+                playerState = PlayerState.Crouching;
+            else if (isSprinting)
+                playerState = PlayerState.Sprinting;
+            else if (moveDirection != Vector3.zero)
+                playerState = PlayerState.Walking;
+            else
+                playerState = PlayerState.Idle;
+        }
+
+
         //Ground check visualization
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position - new Vector3(0f, .65f, 0f), .4f);
+        }
+        
+        public PlayerState GetPlayerState()
+        {
+            return playerState;
         }
     }
 }
