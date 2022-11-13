@@ -22,7 +22,7 @@ namespace MIA.ClimbingRope
         [Header("References")] 
         [SerializeField] private Transform playerCamera;
         [SerializeField] private Transform hookSpawnPosition;
-        [SerializeField]private PlayerMovementController playerMovementController;
+        [SerializeField]private PlayerController playerMovementController;
         [SerializeField] private Transform attackPoint;
         [SerializeField] private GameObject climbingRopePrefab;
         [SerializeField] private LayerMask playerLayer;

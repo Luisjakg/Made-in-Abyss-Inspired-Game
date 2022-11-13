@@ -31,7 +31,7 @@ namespace MIA.ClimbingRope
         [SerializeField] private GameObject hook;
         [SerializeField] private MeshRenderer ropeMeshRenderer;
         private ObiRopeCursor ropeCursor;
-        private PlayerMovementController playerMovementController;
+        private PlayerController playerMovementController;
         private GameObject player;
         private Vector3 startGravityValue;
         private ObiParticleAttachment[] particleAttachments; //0 is for hook & 1 is for player
@@ -42,7 +42,7 @@ namespace MIA.ClimbingRope
             particleAttachments = rope.GetComponents<ObiParticleAttachment>();
             ropeCursor = rope.GetComponent<ObiRopeCursor>();
             player = GameObject.FindGameObjectWithTag("Player");
-            playerMovementController = player.GetComponent<PlayerMovementController>();
+            playerMovementController = player.GetComponent<PlayerController>();
         }
         
         void Start()
@@ -109,7 +109,6 @@ namespace MIA.ClimbingRope
         private void CalculateStrain()
         {
             strain = rope.GetComponent<ObiRope>().CalculateLength() / rope.GetComponent<ObiRope>().restLength;
-            Debug.Log(strain);
         }
 
         public void Visible(bool condition)

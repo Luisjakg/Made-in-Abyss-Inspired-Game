@@ -8,14 +8,14 @@ using Random = UnityEngine.Random;
 
 namespace MIA.PlayerControl
 {
-    public class PlayerMovementController : MonoBehaviour
+    public class PlayerController : MonoBehaviour
     {
-        public bool CanMove { get; private set; } = true;
-        private bool IsMovingForward => Input.GetKey(forwardKey) && !Input.GetKey(backKey);
+        public bool canMove { get; private set; } = true;
+        private bool isMovingForward => Input.GetKey(forwardKey) && !Input.GetKey(backKey);
         private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
         private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
         private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
-        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting && IsMovingForward;
+        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting && isMovingForward;
 
         [Header("Functional Options")] [SerializeField]
         private bool canSprint = true;
@@ -40,10 +40,17 @@ namespace MIA.PlayerControl
         [SerializeField] private KeyCode slideKey = KeyCode.C;
         [SerializeField] private KeyCode forwardKey = KeyCode.W;
         [SerializeField] private KeyCode backKey = KeyCode.S;
+        
+        [Header ("Health Parameters")]
+        [SerializeField] private float maxHealth = 100f;
+        private float currentHealth;
+        public static Action<float> OnTakeDamage;
+        public static Action<float> OnHeal;
+        public static Action<float> OnDamage; 
 
-        [Header("Movement Parameters")] [SerializeField]
-        private float walkSpeed = 3.0f;
 
+        [Header("Movement Parameters")] 
+        [SerializeField] private float walkSpeed = 3.0f;
         [SerializeField] private float sprintSpeed = 6.0f;
         [SerializeField] private float crouchSpeed = 2.0f;
         [SerializeField] private float downSlopeSlideSpeed = 15f;
@@ -69,15 +76,13 @@ namespace MIA.PlayerControl
         [SerializeField] private float massiveFallDamageThreshold; 
         private float maxYVelocity;
 
-        [Header("Crouch Parameters")] [SerializeField]
-        private float crouchYScale = .4f;
-
+        [Header("Crouch Parameters")] 
+        [SerializeField] private float crouchYScale = .4f;
         private float startYScale;
         private bool isStuck;
 
-        [Header("Sliding Parameters")] [SerializeField]
-        private float slideForce = 200f;
-
+        [Header("Sliding Parameters")] 
+        [SerializeField] private float slideForce = 200f;
         [SerializeField] private float slideYScale = .3f;
         [SerializeField] private float slopeIncreaseMultiplier;
         [SerializeField] private float slideSpeedUpTime = 1f;
@@ -94,17 +99,15 @@ namespace MIA.PlayerControl
         [SerializeField] private float stepHeight = 0.3f;
         [SerializeField] private float stepSmooth = 0.1f;
         
-        [Header("Slope Handling")] [SerializeField, Range(0f, 90f)]
-        private float maxSlopeAngle = 40f;
-
+        [Header("Slope Handling")] 
+        [SerializeField, Range(0f, 90f)] private float maxSlopeAngle = 40f;
         [SerializeField, Range(0f, 90f)] private float slideSpeedUpSlopeAngle = 20f;
         private RaycastHit slopeHit;
         private bool exitingSlope;
         private float slopeAngle;
 
-        [Header("HeadBob Parameters")] [SerializeField]
-        private float walkBobSpeed = 14f;
-
+        [Header("HeadBob Parameters")] 
+        [SerializeField] private float walkBobSpeed = 14f;
         [SerializeField] private float walkBobAmount = .05f;
         [SerializeField] private float sprintBobSpeed = 18f;
         [SerializeField] private float sprintBobAmount = .1f;
@@ -113,16 +116,14 @@ namespace MIA.PlayerControl
         private float defaultYPos = 0;
         private float headBobTimer;
 
-        [Header("Footstep Parameters")] [SerializeField]
-        private float baseStepSpeed = .05f;
-
+        [Header("Footstep Parameters")] 
+        [SerializeField] private float baseStepSpeed = .05f;
         [SerializeField] private float crouchStepMultiplier = 1.5f;
         [SerializeField] private float sprintStepMultiplier = 0.6f;
         [SerializeField] private AudioClip[] grassClips = default;
         [SerializeField] private AudioClip[] stoneClips = default;
         [SerializeField] private AudioClip[] woodClips = default;
         private float footstepTimer = 0;
-
         private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
             isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
@@ -147,9 +148,20 @@ namespace MIA.PlayerControl
         }
         
         private Rigidbody rb;
+
+        private void OnEnable()
+        {
+            OnTakeDamage += ApplyDamage;
+        }
         
+        private void OnDisable()
+        {
+            OnTakeDamage -= ApplyDamage;
+        }
+
         private void Awake()
         {
+            currentHealth = maxHealth;
             maxYVelocity = 0;
             rb = GetComponent<Rigidbody>();
             rb.freezeRotation = true;
@@ -169,7 +181,7 @@ namespace MIA.PlayerControl
             //ground check
             GroundCheck();
 
-            if (CanMove) HandleMovementInput();
+            if (canMove) HandleMovementInput();
 
             if (canSprint) HandleSprint();
 
@@ -393,6 +405,38 @@ namespace MIA.PlayerControl
             }
         }
 
+        private void ApplyDamage(float damage)
+        {
+            Debug.Log("Player took " + damage + " damage");
+            if (currentHealth - damage <= 0)
+                currentHealth = 0;
+            else 
+                currentHealth -= damage;
+
+            OnDamage?.Invoke(currentHealth);
+            
+            if (currentHealth <= 0)
+                KillPlayer();
+
+        }
+
+        private void KillPlayer()
+        {
+            currentHealth = 0;
+            
+            Debug.Log("Player is dead");
+        }
+        
+        private void AddHealth(float health)
+        {
+            if (currentHealth + health >= maxHealth)
+                currentHealth = maxHealth;
+            else
+                currentHealth += health;
+
+            OnHeal?.Invoke(currentHealth);
+        }
+        
         private void ApplyFinalMovements()
         {
             //Turn off gravity while in slope
@@ -408,9 +452,10 @@ namespace MIA.PlayerControl
             }
 
             //on ground
+            if (horizontalInput == 0 && verticalInput == 0 && isGrounded && !isSliding)
+                rb.velocity = Vector3.zero;
             else if (isGrounded)
                 rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f), ForceMode.Force);
-
             // in air
             else if (!isGrounded)
                 rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f * airMultiplier), ForceMode.Force);
@@ -500,13 +545,13 @@ namespace MIA.PlayerControl
         private IEnumerator SmoothlyLerpMoveSpeed(float duration)
         {
             // TODO keep momentum when jumping while fast & moving forward
-            bool decreasing;
+            //bool decreasing;
             float elapsed = 0.0f;
             float startSpeed = currentMoveSpeed;
             float endSpeed = desiredMoveSpeed;
 
-            if (startSpeed > endSpeed) decreasing = true;
-            else decreasing = false;
+            /*if (startSpeed > endSpeed) decreasing = true;
+            else decreasing = false;*/
 
             while (elapsed < duration)
             {
