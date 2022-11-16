@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Footsteps/GRASS
+  - Footsteps/STONE
+  - Footsteps/WOOD
+  - Core
   layers:
   - Default
   - TransparentFX
@@ -11,6 +15,8 @@ TagManager:
   - Player
   - Water
   - UI
+  - Ground
+  - PlayerItem
   - 
   - 
   - 
@@ -34,9 +40,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
+  - PostProcessing
   m_SortingLayers:
   - name: Default
     uniqueID: 0
