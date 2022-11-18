@@ -1798,6 +1798,12 @@ MonoBehaviour:
   filter: -65535
   m_SourceCollider: {fileID: 853919174}
   m_DistanceField: {fileID: 0}
+--- !u!136 &1037069733 stripped
+CapsuleCollider:
+  m_CorrespondingSourceObject: {fileID: 2773459945743437663, guid: 99372d2caa1d0274683d704406ea21e0,
+    type: 3}
+  m_PrefabInstance: {fileID: 2773459946045171209}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1063503766
 GameObject:
   m_ObjectHideFlags: 0
@@ -3501,6 +3507,16 @@ PrefabInstance:
         type: 3}
       propertyPath: crouchYScale
       value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2773459945743437662, guid: 99372d2caa1d0274683d704406ea21e0,
+        type: 3}
+      propertyPath: playerCollider
+      value: 
+      objectReference: {fileID: 1037069733}
+    - target: {fileID: 2773459945743437663, guid: 99372d2caa1d0274683d704406ea21e0,
+        type: 3}
+      propertyPath: m_Height
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2773459945743437663, guid: 99372d2caa1d0274683d704406ea21e0,
         type: 3}

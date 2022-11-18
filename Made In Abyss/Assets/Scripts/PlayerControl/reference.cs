@@ -15,8 +15,8 @@ namespace MIA.PlayerControl
         private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
         private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting;
 
-        [Header("Functional Options")] [SerializeField]
-        private bool canSprint = true;
+        [Header("Functional Options")] 
+        [SerializeField] private bool canSprint = true;
         [SerializeField] private bool canJump = true;
         [SerializeField] private bool canSlide = true;
         [SerializeField] private bool canCrouch = true;
@@ -26,19 +26,27 @@ namespace MIA.PlayerControl
         [Header("Audio")]
         [SerializeField] private AudioSource playerAudioSource = default;
 
-        [Header("States")] [SerializeField] private bool isCrouching;
+        [Header("States")] 
+        [SerializeField] private bool isCrouching;
         [SerializeField] private bool isSliding;
         [SerializeField] private bool isJumping;
         [SerializeField] private bool isSprinting;
 
-        [Header("Controls")] [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
+        [Header("Controls")] 
+        [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
         [SerializeField] private KeyCode jumpKey = KeyCode.Space;
         [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
         [SerializeField] private KeyCode slideKey = KeyCode.C;
+        
+        [Header ("Health Parameters")]
+        [SerializeField] private float maxHealth = 100f;
+        private float currentHealth;
+        public static Action<float> OnTakeDamage;
+        public static Action<float> OnHeal;
+        public static Action<float> OnDamage; 
 
-        [Header("Movement Parameters")] [SerializeField]
-        private float walkSpeed = 3.0f;
-
+        [Header("Movement Parameters")] 
+        [SerializeField] private float walkSpeed = 3.0f;
         [SerializeField] private float sprintSpeed = 6.0f;
         [SerializeField] private float crouchSpeed = 2.0f;
         [SerializeField] private float downSlopeSlideSpeed = 15f;
@@ -64,23 +72,21 @@ namespace MIA.PlayerControl
         [SerializeField] private float massiveFallDamageThreshold; 
         private float maxYVelocity;
 
-        [Header("Crouch Parameters")] [SerializeField]
-        private float crouchYScale = .4f;
-
+        [Header("Crouch Parameters")] 
+        [SerializeField] private float crouchYScale = .4f;
         private float startYScale;
         private bool isStuck;
 
-        [Header("Sliding Parameters")] [SerializeField]
-        private float slideForce = 200f;
-
+        [Header("Sliding Parameters")] 
+        [SerializeField] private float slideForce = 200f;
         [SerializeField] private float slideYScale = .3f;
         [SerializeField] private float slopeIncreaseMultiplier;
         [SerializeField] private float slideSpeedUpTime = 1f;
         [SerializeField] private float slideSpeedDownTime = 1f;
         private float lerpSpeed;
 
-        [Header("GroundCheck")] [SerializeField]
-        private LayerMask whatIsGround;
+        [Header("GroundCheck")] 
+        [SerializeField] private LayerMask whatIsGround;
         [SerializeField] private bool isGrounded;
 
         [Header("Step Parameters")] 
@@ -89,17 +95,15 @@ namespace MIA.PlayerControl
         [SerializeField] private float stepHeight = 0.3f;
         [SerializeField] private float stepSmooth = 0.1f;
         
-        [Header("Slope Handling")] [SerializeField, Range(0f, 90f)]
-        private float maxSlopeAngle = 40f;
-
+        [Header("Slope Handling")] 
+        [SerializeField, Range(0f, 90f)] private float maxSlopeAngle = 40f;
         [SerializeField, Range(0f, 90f)] private float slideSpeedUpSlopeAngle = 20f;
         private RaycastHit slopeHit;
         private bool exitingSlope;
         private float slopeAngle;
 
-        [Header("HeadBob Parameters")] [SerializeField]
-        private float walkBobSpeed = 14f;
-
+        [Header("HeadBob Parameters")] 
+        [SerializeField] private float walkBobSpeed = 14f;
         [SerializeField] private float walkBobAmount = .05f;
         [SerializeField] private float sprintBobSpeed = 18f;
         [SerializeField] private float sprintBobAmount = .1f;
@@ -108,9 +112,8 @@ namespace MIA.PlayerControl
         private float defaultYPos = 0;
         private float headBobTimer;
 
-        [Header("Footstep Parameters")] [SerializeField]
-        private float baseStepSpeed = .05f;
-
+        [Header("Footstep Parameters")] 
+        [SerializeField] private float baseStepSpeed = .05f;
         [SerializeField] private float crouchStepMultiplier = 1.5f;
         [SerializeField] private float sprintStepMultiplier = 0.6f;
         [SerializeField] private AudioClip[] grassClips = default;
@@ -121,9 +124,8 @@ namespace MIA.PlayerControl
         private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
             isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
-        [Header("Orientation")] [SerializeField]
-        private Transform orientation;
-
+        [Header("Orientation")] 
+        [SerializeField] private Transform orientation;
         [SerializeField] private Camera playerCam;
         [SerializeField] private Collider playerCollider;
         private Vector3 playerLookDirection;
@@ -131,6 +133,28 @@ namespace MIA.PlayerControl
         private float verticalInput;
 
         private Rigidbody rb;
+        
+        private void OnEnable()
+        {
+            OnTakeDamage += ApplyDamage;
+        }
+        
+        private void OnDisable()
+        {
+            OnTakeDamage -= ApplyDamage;
+        }
+        
+        [Header("State")]
+        [SerializeField] private PlayerState playerState = default;
+
+        public enum PlayerState
+        {
+            Walking,
+            Sprinting,
+            Crouching,
+            Sliding,
+            Idle
+        }
 
         private void Awake()
         {
@@ -563,7 +587,53 @@ namespace MIA.PlayerControl
 
             //TODO call to the health script to reduce health or something -\_(;-;)_/-
         }
+        
+        private void HandleStates()
+        {
+            if (isSliding)
+                playerState = PlayerState.Sliding;
+            else if (isCrouching)
+                playerState = PlayerState.Crouching;
+            else if (isSprinting)
+                playerState = PlayerState.Sprinting;
+            else if (moveDirection != Vector3.zero)
+                playerState = PlayerState.Walking;
+            else
+                playerState = PlayerState.Idle;
+        }
 
+        private void ApplyDamage(float damage)
+        {
+            Debug.Log("Player took " + damage + " damage");
+            if (currentHealth - damage <= 0)
+                currentHealth = 0;
+            else 
+                currentHealth -= damage;
+
+            OnDamage?.Invoke(currentHealth);
+            
+            if (currentHealth <= 0)
+                KillPlayer();
+
+        }
+        
+        private void KillPlayer()
+        {
+            currentHealth = 0;
+            
+            Debug.Log("Player is dead");
+        }
+        
+        private void AddHealth(float health)
+        {
+            if (currentHealth + health >= maxHealth)
+                currentHealth = maxHealth;
+            else
+                currentHealth += health;
+
+            OnHeal?.Invoke(currentHealth);
+        }
+        
         public bool GetIsGrounded()
         {
             return isGrounded;

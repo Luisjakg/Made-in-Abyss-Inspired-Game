@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using Obi;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 using Random = UnityEngine.Random;
@@ -10,15 +9,14 @@ namespace MIA.PlayerControl
 {
     public class PlayerController : MonoBehaviour
     {
-        public bool canMove { get; private set; } = true;
-        private bool isMovingForward => Input.GetKey(forwardKey) && !Input.GetKey(backKey);
+        public bool CanMove { get; private set; } = true;
         private bool shouldSprint => canSprint && Input.GetKey(sprintKey);
         private bool shouldJump => Input.GetKeyDown(jumpKey) && isGrounded;
         private bool shouldCrouch => Input.GetKeyDown(crouchKey) && isGrounded;
-        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded && isSprinting && isMovingForward;
+        private bool shouldSlide => Input.GetKeyDown(slideKey) && isGrounded;
 
-        [Header("Functional Options")] [SerializeField]
-        private bool canSprint = true;
+        [Header("Functional Options")] 
+        [SerializeField] private bool canSprint = true;
         [SerializeField] private bool canJump = true;
         [SerializeField] private bool canSlide = true;
         [SerializeField] private bool canCrouch = true;
@@ -28,7 +26,8 @@ namespace MIA.PlayerControl
         [Header("Audio")]
         [SerializeField] private AudioSource playerAudioSource = default;
 
-        [Header("States")] [SerializeField] private bool isCrouching;
+        [Header("States")] 
+        [SerializeField] private bool isCrouching;
         [SerializeField] private bool isSliding;
         [SerializeField] private bool isJumping;
         [SerializeField] private bool isSprinting;
@@ -38,8 +37,6 @@ namespace MIA.PlayerControl
         [SerializeField] private KeyCode jumpKey = KeyCode.Space;
         [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
         [SerializeField] private KeyCode slideKey = KeyCode.C;
-        [SerializeField] private KeyCode forwardKey = KeyCode.W;
-        [SerializeField] private KeyCode backKey = KeyCode.S;
         
         [Header ("Health Parameters")]
         [SerializeField] private float maxHealth = 100f;
@@ -47,7 +44,6 @@ namespace MIA.PlayerControl
         public static Action<float> OnTakeDamage;
         public static Action<float> OnHeal;
         public static Action<float> OnDamage; 
-
 
         [Header("Movement Parameters")] 
         [SerializeField] private float walkSpeed = 3.0f;
@@ -89,8 +85,8 @@ namespace MIA.PlayerControl
         [SerializeField] private float slideSpeedDownTime = 1f;
         private float lerpSpeed;
 
-        [Header("GroundCheck")] [SerializeField]
-        private LayerMask whatIsGround;
+        [Header("GroundCheck")] 
+        [SerializeField] private LayerMask whatIsGround;
         [SerializeField] private bool isGrounded;
 
         [Header("Step Parameters")] 
@@ -124,6 +120,7 @@ namespace MIA.PlayerControl
         [SerializeField] private AudioClip[] stoneClips = default;
         [SerializeField] private AudioClip[] woodClips = default;
         private float footstepTimer = 0;
+
         private float GetCurrentOffSet => isCrouching ? baseStepSpeed * crouchStepMultiplier :
             isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
@@ -134,6 +131,18 @@ namespace MIA.PlayerControl
         private Vector3 playerLookDirection;
         private float horizontalInput;
         private float verticalInput;
+
+        private Rigidbody rb;
+        
+        private void OnEnable()
+        {
+            OnTakeDamage += ApplyDamage;
+        }
+        
+        private void OnDisable()
+        {
+            OnTakeDamage -= ApplyDamage;
+        }
         
         [Header("State")]
         [SerializeField] private PlayerState playerState = default;
@@ -146,22 +155,9 @@ namespace MIA.PlayerControl
             Sliding,
             Idle
         }
-        
-        private Rigidbody rb;
-
-        private void OnEnable()
-        {
-            OnTakeDamage += ApplyDamage;
-        }
-        
-        private void OnDisable()
-        {
-            OnTakeDamage -= ApplyDamage;
-        }
 
         private void Awake()
         {
-            currentHealth = maxHealth;
             maxYVelocity = 0;
             rb = GetComponent<Rigidbody>();
             rb.freezeRotation = true;
@@ -181,7 +177,7 @@ namespace MIA.PlayerControl
             //ground check
             GroundCheck();
 
-            if (canMove) HandleMovementInput();
+            if (CanMove) HandleMovementInput();
 
             if (canSprint) HandleSprint();
 
@@ -204,8 +200,7 @@ namespace MIA.PlayerControl
                 rb.drag = groundDrag;
             else
                 rb.drag = 0;
-            
-            HandleStates();
+
         }
 
         private void FixedUpdate()
@@ -218,12 +213,8 @@ namespace MIA.PlayerControl
 
         private void GroundCheck()
         {
-            Vector3 cast = transform.position;
-            
-            //if (Physics.Raycast(transform.position, Vector3.down, CurrentHeight() * 0.5f + 0.2f, whatIsGround)) (OLD RAYCAST)
-            if (Physics.SphereCast(cast, .4f, Vector3.down,out RaycastHit hit ,.65f, whatIsGround))
+            if (Physics.Raycast(transform.position, Vector3.down, CurrentHeight() + .1f, whatIsGround))
             {
-                isJumping = false;
                 isGrounded = true;
                 if (maxYVelocity <= fallDamageSpeedThreshold)
                 {
@@ -246,12 +237,10 @@ namespace MIA.PlayerControl
 
             verticalInput = Input.GetAxisRaw("Vertical");
 
+            //I have no idea why, but it wont work properly if it isn't done this way
+            
             if (shouldSlide)
-            {
-                var newDirection = playerCam.transform.forward;
-                newDirection = new Vector3(newDirection.x, 0f, newDirection.z);
-                moveDirection = newDirection;
-            }
+                moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
             else if (!isSliding)
                 moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
         }
@@ -267,8 +256,6 @@ namespace MIA.PlayerControl
         private void HandleJump()
         {
             if (!shouldJump || !readyToJump) return;
-            bool roofAbove = Physics.Raycast(transform.position, Vector3.up, 1.2f);
-            if (isSliding && !roofAbove) StopSlide();
 
             isJumping = true;
             readyToJump = false;
@@ -276,14 +263,15 @@ namespace MIA.PlayerControl
 
             //reset y velocity
             rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-
-            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            rb.AddForce(new Vector3(rb.velocity.x, 0f, rb.velocity.z), ForceMode.Impulse);
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
         private void ResetJump()
         {
+            isJumping = false;
             readyToJump = true;
             exitingSlope = false;
         }
@@ -292,9 +280,13 @@ namespace MIA.PlayerControl
         {
             // We check the current speed to avoid overlap with crouch
             if (!shouldSlide) return;
+            if (isSliding)
+            {
+                StopSlide();
+                return;
+            }
             if (isCrouching || !isGrounded) return;
             if (!isSliding && isSprinting && currentSpeedMagnitude > 3f) StartSlide();
-            else StopSlideWithCrouch();
         }
 
         private void StartSlide()
@@ -405,38 +397,6 @@ namespace MIA.PlayerControl
             }
         }
 
-        private void ApplyDamage(float damage)
-        {
-            Debug.Log("Player took " + damage + " damage");
-            if (currentHealth - damage <= 0)
-                currentHealth = 0;
-            else 
-                currentHealth -= damage;
-
-            OnDamage?.Invoke(currentHealth);
-            
-            if (currentHealth <= 0)
-                KillPlayer();
-
-        }
-
-        private void KillPlayer()
-        {
-            currentHealth = 0;
-            
-            Debug.Log("Player is dead");
-        }
-        
-        private void AddHealth(float health)
-        {
-            if (currentHealth + health >= maxHealth)
-                currentHealth = maxHealth;
-            else
-                currentHealth += health;
-
-            OnHeal?.Invoke(currentHealth);
-        }
-        
         private void ApplyFinalMovements()
         {
             //Turn off gravity while in slope
@@ -444,7 +404,7 @@ namespace MIA.PlayerControl
             // on slope
             if (OnSlope() && !exitingSlope)
             {
-                rb.AddForce(GetSlopeMoveDirection(moveDirection) * (currentMoveSpeed * 20f), ForceMode.Force);
+                rb.AddForce(GetSlopeMoveDirection(moveDirection) * currentMoveSpeed * 20f, ForceMode.Force);
 
                 //We add force to avoid weird bouncing while going down slopes
                 if (rb.velocity.y > 0)
@@ -452,13 +412,12 @@ namespace MIA.PlayerControl
             }
 
             //on ground
-            if (horizontalInput == 0 && verticalInput == 0 && isGrounded && !isSliding)
-                rb.velocity = Vector3.zero;
             else if (isGrounded)
-                rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f), ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f, ForceMode.Force);
+
             // in air
             else if (!isGrounded)
-                rb.AddForce(moveDirection.normalized * (currentMoveSpeed * 10f * airMultiplier), ForceMode.Force);
+                rb.AddForce(moveDirection.normalized * currentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
 
 
@@ -467,6 +426,8 @@ namespace MIA.PlayerControl
             Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
             // normal sliding
+            
+            
             if (!OnSlope() || rb.velocity.y > -0.1f)
             {
                 rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
@@ -545,13 +506,13 @@ namespace MIA.PlayerControl
         private IEnumerator SmoothlyLerpMoveSpeed(float duration)
         {
             // TODO keep momentum when jumping while fast & moving forward
-            //bool decreasing;
+            bool decreasing;
             float elapsed = 0.0f;
             float startSpeed = currentMoveSpeed;
             float endSpeed = desiredMoveSpeed;
 
-            /*if (startSpeed > endSpeed) decreasing = true;
-            else decreasing = false;*/
+            if (startSpeed > endSpeed) decreasing = true;
+            else decreasing = false;
 
             while (elapsed < duration)
             {
@@ -617,7 +578,7 @@ namespace MIA.PlayerControl
 
         private float CurrentHeight()
         {
-            float currentHeight = (isCrouching ? crouchYScale + 1 : isSliding ? slideYScale + 1 : standingHeight);
+            float currentHeight = (isCrouching ? crouchYScale + 1 : isSliding ? slideYScale + 1 : standingHeight) / 2;
             return currentHeight;
         }
         
@@ -631,17 +592,6 @@ namespace MIA.PlayerControl
 
             //TODO call to the health script to reduce health or something -\_(;-;)_/-
         }
-
-        public bool GetIsGrounded()
-        {
-            return isGrounded;
-        }
-
-        public Vector3 GetVelocity()
-        {
-            return rb.velocity;
-        }
-        
         
         private void HandleStates()
         {
@@ -657,17 +607,46 @@ namespace MIA.PlayerControl
                 playerState = PlayerState.Idle;
         }
 
-
-        //Ground check visualization
-        private void OnDrawGizmosSelected()
+        private void ApplyDamage(float damage)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position - new Vector3(0f, .65f, 0f), .4f);
+            Debug.Log("Player took " + damage + " damage");
+            if (currentHealth - damage <= 0)
+                currentHealth = 0;
+            else 
+                currentHealth -= damage;
+
+            OnDamage?.Invoke(currentHealth);
+            
+            if (currentHealth <= 0)
+                KillPlayer();
+
         }
         
-        public PlayerState GetPlayerState()
+        private void KillPlayer()
         {
-            return playerState;
+            currentHealth = 0;
+            
+            Debug.Log("Player is dead");
+        }
+        
+        private void AddHealth(float health)
+        {
+            if (currentHealth + health >= maxHealth)
+                currentHealth = maxHealth;
+            else
+                currentHealth += health;
+
+            OnHeal?.Invoke(currentHealth);
+        }
+        
+        public bool GetIsGrounded()
+        {
+            return isGrounded;
+        }
+        
+        public Vector3 GetVelocity()
+        {
+            return rb.velocity;
         }
     }
 }
