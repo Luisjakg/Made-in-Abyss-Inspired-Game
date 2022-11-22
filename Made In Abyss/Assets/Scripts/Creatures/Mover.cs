@@ -17,7 +17,7 @@ public class Mover : MonoBehaviour
 
     public void MoveTo(Vector3 destination, float speedFraction)
     {
-        navMeshAgent.destination = destination;
+        navMeshAgent.SetDestination(destination);
         navMeshAgent.speed = maxSpeed * Mathf.Clamp01(speedFraction);
         navMeshAgent.isStopped = false;
     }
@@ -25,6 +25,11 @@ public class Mover : MonoBehaviour
     public void Cancel()
     {
         navMeshAgent.isStopped = true;
+    }
+    
+    public bool HasPath()
+    {
+        return navMeshAgent.hasPath;
     }
     
     

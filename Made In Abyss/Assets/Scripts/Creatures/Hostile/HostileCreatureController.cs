@@ -1,19 +1,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using MIA.PlayerControl;
 using UnityEngine;
 
 [RequireComponent(typeof(Mover))]
 public class HostileCreatureController : MonoBehaviour
 {
     [Header("FOV Settings")]   
-    [SerializeField] private float radius = 10f;
+    [SerializeField] private float maxRadius = 10f;
     [SerializeField, Range(0, 360)] private float angle = 90f;
     [SerializeField] private LayerMask targetMask;
     [SerializeField] private LayerMask obstructionMask;
     [SerializeField] private bool canSeePlayer;
-    public Action<bool> OnCanSeePlayerChanged;
-    
+
+    [Header("Player State Range Settings")] 
+    [SerializeField] private Dictionary<PlayerController.PlayerState, float> playerStateRanges;
+
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float huntMoveSpeed = 10f;
@@ -61,7 +64,7 @@ public class HostileCreatureController : MonoBehaviour
 
     private void FieldOfViewCheck()
     {
-        Collider[] rangeChecks = Physics.OverlapSphere(transform.position, radius, targetMask);
+        Collider[] rangeChecks = Physics.OverlapSphere(transform.position, maxRadius, targetMask);
 
         if (rangeChecks.Length != 0)
         {
@@ -83,10 +86,17 @@ public class HostileCreatureController : MonoBehaviour
         else if (canSeePlayer)
             canSeePlayer = false;
     }
+
+    /*private bool RaycastPlayerState()
+    {
+        foreach (var playerStateRange in playerStateRanges)
+        {
+            
+        }
+    }*/
     
     private void ApplyDamage(float damage)
     {
-        Debug.Log("Creature took " + damage + " damage");
         if (currentHealth - damage <= 0)
             currentHealth = 0;
         else 
@@ -100,14 +110,20 @@ public class HostileCreatureController : MonoBehaviour
     {
         throw new NotImplementedException();
     }
+    
+    public bool HasTarget()
+    {
+        return canSeePlayer;
+    }
 
+    // Fov Gizmo
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, radius);
+        Gizmos.DrawWireSphere(transform.position, maxRadius);
         
-        Vector3 fovLine1 = Quaternion.AngleAxis(angle / 2, transform.up) * transform.forward * radius;
-        Vector3 fovLine2 = Quaternion.AngleAxis(-angle / 2, transform.up) * transform.forward * radius;
+        Vector3 fovLine1 = Quaternion.AngleAxis(angle / 2, transform.up) * transform.forward * maxRadius;
+        Vector3 fovLine2 = Quaternion.AngleAxis(-angle / 2, transform.up) * transform.forward * maxRadius;
         
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(transform.position, fovLine1);
@@ -116,7 +132,7 @@ public class HostileCreatureController : MonoBehaviour
         if (canSeePlayer)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawRay(transform.position, (player.transform.position - transform.position).normalized * radius);
+            Gizmos.DrawRay(transform.position, (player.transform.position - transform.position).normalized * maxRadius);
         }
     }
 }

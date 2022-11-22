@@ -17,7 +17,6 @@ namespace MIA.ClimbingRope
         [SerializeField] private KeyCode extendRope = KeyCode.Mouse1;
         
         [Header("Size Change Control")]
-        [SerializeField] private float airExtendMultiplier = .8f;
         [SerializeField] private float minimumRopeSize = .4f;
         [SerializeField] private float maxRopeSize = 30f;
         [SerializeField] private float retractSpeed;
