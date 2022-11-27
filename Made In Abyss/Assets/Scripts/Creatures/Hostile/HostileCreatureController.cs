@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using MIA.PlayerControl;
 using UnityEngine;
+using UnityEngine.Rendering.UI;
 
 [RequireComponent(typeof(Mover))]
 public class HostileCreatureController : MonoBehaviour
@@ -12,10 +13,14 @@ public class HostileCreatureController : MonoBehaviour
     [SerializeField, Range(0, 360)] private float angle = 90f;
     [SerializeField] private LayerMask targetMask;
     [SerializeField] private LayerMask obstructionMask;
-    [SerializeField] private bool canSeePlayer;
+    [SerializeField] private bool canSeeTarget;
 
-    [Header("Player State Range Settings")] 
-    [SerializeField] private Dictionary<PlayerController.PlayerState, float> playerStateRanges;
+    [Header("Player State Range Settings")]
+    [SerializeField, Range(0,100)] private float walkingRange = 80f;
+    [SerializeField, Range(0,100)] private float sprintingRange = 100f;
+    [SerializeField, Range(0,100)] private float crouchingRange = 50f;
+    [SerializeField, Range(0,100)] private float slidingRange = 50f;
+    [SerializeField, Range(0,100)] private float idleRange = 80f; 
 
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
@@ -27,6 +32,7 @@ public class HostileCreatureController : MonoBehaviour
 
     private GameObject player;
     private Mover mover;
+    private Transform target;
 
     private void Awake()
     {
@@ -42,12 +48,15 @@ public class HostileCreatureController : MonoBehaviour
 
     private void Update()
     {
-        if (canSeePlayer) HuntPlayer();
+        if (canSeeTarget) HuntTarget();
     }
 
-    private void HuntPlayer()
+    private void HuntTarget()
     {
-        mover.MoveTo(player.transform.position, huntMoveSpeed);
+        if (target.CompareTag("Player"))
+            mover.MoveTo(player.transform.position, huntMoveSpeed);
+        else
+            mover.MoveTo(target.position, huntMoveSpeed);
     }
 
 
@@ -64,36 +73,59 @@ public class HostileCreatureController : MonoBehaviour
 
     private void FieldOfViewCheck()
     {
+        float range = maxRadius;
         Collider[] rangeChecks = Physics.OverlapSphere(transform.position, maxRadius, targetMask);
 
         if (rangeChecks.Length != 0)
         {
-            Transform target = rangeChecks[0].transform;
+            target = rangeChecks[0].transform;
             Vector3 directionToTarget = (target.position - transform.position).normalized;
             
             if (Vector3.Angle(transform.forward, directionToTarget) < angle / 2)
             {
                 float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
-                if (!Physics.Raycast(transform.position, directionToTarget, distanceToTarget, obstructionMask))
-                    canSeePlayer = true;
+                if (target.CompareTag("Player"))
+                    range = CalculateToPlayerStates(range);
+
+                if (distanceToTarget <= range)
+                {
+                    if (!Physics.Raycast(transform.position, directionToTarget, distanceToTarget, obstructionMask))
+                        canSeeTarget = true;
+                    else
+                        canSeeTarget = false;
+                }
                 else
-                    canSeePlayer = false;
+                    canSeeTarget = false;
             }
             else 
-                canSeePlayer = false;
+                canSeeTarget = false;
         }
-        else if (canSeePlayer)
-            canSeePlayer = false;
+        else if (canSeeTarget)
+            canSeeTarget = false;
     }
 
-    /*private bool RaycastPlayerState()
+    private float CalculateToPlayerStates(float range)
     {
-        foreach (var playerStateRange in playerStateRanges)
+        PlayerController.PlayerState playerState = player.GetComponent<PlayerController>().GetPlayerState();
+
+        switch (playerState)
         {
-            
+            case PlayerController.PlayerState.Walking:
+                return range * walkingRange / 100;
+            case PlayerController.PlayerState.Sprinting:
+                return range * sprintingRange / 100;
+            case PlayerController.PlayerState.Crouching:
+                return range * crouchingRange / 100;
+            case PlayerController.PlayerState.Sliding:
+                return range * slidingRange / 100;
+            case PlayerController.PlayerState.Idle:
+                return range * idleRange / 100;
+            default:
+                Debug.Log("Player State not found");
+                return range;
         }
-    }*/
+    }
     
     private void ApplyDamage(float damage)
     {
@@ -113,7 +145,7 @@ public class HostileCreatureController : MonoBehaviour
     
     public bool HasTarget()
     {
-        return canSeePlayer;
+        return canSeeTarget;
     }
 
     // Fov Gizmo
@@ -129,7 +161,7 @@ public class HostileCreatureController : MonoBehaviour
         Gizmos.DrawRay(transform.position, fovLine1);
         Gizmos.DrawRay(transform.position, fovLine2);
 
-        if (canSeePlayer)
+        if (canSeeTarget)
         {
             Gizmos.color = Color.red;
             Gizmos.DrawRay(transform.position, (player.transform.position - transform.position).normalized * maxRadius);

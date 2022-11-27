@@ -232,6 +232,7 @@ GameObject:
   - component: {fileID: 102207952}
   - component: {fileID: 102207953}
   - component: {fileID: 102207954}
+  - component: {fileID: 102207955}
   m_Layer: 0
   m_Name: Enemy 1
   m_TagString: Untagged
@@ -289,7 +290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bca60acbee6eae4e8b0628f1700c929, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 15.95
+  maxRadius: 10
   angle: 90
   targetMask:
     serializedVersion: 2
@@ -297,7 +298,12 @@ MonoBehaviour:
   obstructionMask:
     serializedVersion: 2
     m_Bits: 64
-  canSeePlayer: 0
+  canSeeTarget: 0
+  walkingRange: 80
+  sprintingRange: 100
+  crouchingRange: 50
+  slidingRange: 50
+  idleRange: 80
   moveSpeed: 2
   huntMoveSpeed: 3
   maxHealth: 100
@@ -331,6 +337,19 @@ MonoBehaviour:
   roamPoint: {fileID: 1428663916}
   roamSpeed: 0.5
   roamWaitTime: 5
+--- !u!114 &102207955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102207949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdf2dc3634e573c4d8eeec1c8cad9762, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  range: 5
 --- !u!1 &180075225
 GameObject:
   m_ObjectHideFlags: 0

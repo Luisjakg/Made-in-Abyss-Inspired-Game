@@ -209,6 +209,8 @@ namespace MIA.PlayerControl
                 SlidingMovement();
 
             ApplyFinalMovements();
+            
+            HandleStates();
         }
 
         private void GroundCheck()
@@ -642,6 +644,11 @@ namespace MIA.PlayerControl
         public bool GetIsGrounded()
         {
             return isGrounded;
+        }
+
+        public PlayerState GetPlayerState()
+        {
+            return playerState;
         }
         
         public Vector3 GetVelocity()
